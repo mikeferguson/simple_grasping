@@ -26,7 +26,6 @@ link_directories(
 )
 
 catkin_package(
-  INCLUDE_DIRS include
   CATKIN_DEPENDS
     actionlib
     geometry_msgs
@@ -35,25 +34,41 @@ catkin_package(
     pcl_ros
     sensor_msgs
     shape_msgs
+  INCLUDE_DIRS include
+  LIBRARIES
+    simple_grasping
 )
 
-include_directories(include
-                    SYSTEM
-                    ${Boost_INCLUDE_DIRS}
-                    ${catkin_INCLUDE_DIRS}
-                    ${Eigen_INCLUDE_DIRS}
-                    ${PCL_INCLUDE_DIRS}
-                   )
+include_directories(
+  include
+  SYSTEM
+  ${Boost_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+)
+
+### Build simple_grasping library
+add_library(simple_grasping
+  src/cloud_tools.cpp
+  src/object_support_segmentation.cpp
+  src/shape_extraction.cpp
+  src/shape_grasp_planner.cpp
+)
+target_link_libraries(simple_grasping
+  ${Boost_LIBRARIES}
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
 
 ### Build basic_grasping_perception
-add_executable(basic_grasping_perception src/basic_grasping_perception.cpp
-                                         src/cloud_tools.cpp
-                                         src/object_support_segmentation.cpp
-                                         src/shape_extraction.cpp
-                                         src/shape_grasp_planner.cpp)
-target_link_libraries(basic_grasping_perception ${Boost_LIBRARIES}
-                                                ${catkin_LIBRARIES}
-                                                ${PCL_LIBRARIES})
+add_executable(basic_grasping_perception src/basic_grasping_perception.cpp)
+target_link_libraries(basic_grasping_perception
+  simple_grasping
+  ${Boost_LIBRARIES}
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
 add_dependencies(basic_grasping_perception grasping_msgs_generate_messages_cpp)
 
 ### Test
@@ -63,6 +78,12 @@ endif()
 
 ### Install
 install(
-  TARGETS basic_grasping_perception
+  DIRECTORY include/
+  DESTINATION include
+)
+
+install(
+  TARGETS simple_grasping basic_grasping_perception
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )

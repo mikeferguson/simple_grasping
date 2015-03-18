@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015, Fetch Robotics Inc.
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * All rights reserved.
  *
@@ -38,28 +39,13 @@ using shape_msgs::SolidPrimitive;
 namespace simple_grasping
 {
 
-trajectory_msgs::JointTrajectory makeGraspPosture(double pose)
-{
-  trajectory_msgs::JointTrajectory trajectory;
-  trajectory.joint_names.push_back("l_gripper_finger_joint");
-  trajectory.joint_names.push_back("r_gripper_finger_joint");
-  trajectory_msgs::JointTrajectoryPoint point;
-  point.positions.push_back(pose/2.0);
-  point.positions.push_back(pose/2.0);
-  point.effort.push_back(28.0);
-  point.effort.push_back(28.0);
-  point.time_from_start = ros::Duration(10.0);
-  trajectory.points.push_back(point);
-  return trajectory;
-}
-
-
-moveit_msgs::GripperTranslation makeGripperTranslation(std::string frame,
-                                                       double min,
-                                                       double desired,
-                                                       double x_axis = 1.0,
-                                                       double y_axis = 0.0,
-                                                       double z_axis = 0.0)
+moveit_msgs::GripperTranslation makeGripperTranslation(
+  std::string frame,
+  double min,
+  double desired,
+  double x_axis = 1.0,
+  double y_axis = 0.0,
+  double z_axis = 0.0)
 {
   moveit_msgs::GripperTranslation translation;
   translation.direction.vector.x = x_axis;
@@ -70,7 +56,6 @@ moveit_msgs::GripperTranslation makeGripperTranslation(std::string frame,
   translation.desired_distance = desired;
   return translation;
 }
-
 
 Eigen::Quaterniond quaternionFromEuler(float yaw, float pitch, float roll)
 {
@@ -87,12 +72,36 @@ Eigen::Quaterniond quaternionFromEuler(float yaw, float pitch, float roll)
   return Eigen::Quaterniond(w,x,y,z);
 }
 
-
-ShapeGraspPlanner::ShapeGraspPlanner(double gripper_max_opening,
-                                     double gripper_finger_depth) :
-    max_opening_(gripper_max_opening),
-    finger_depth_(gripper_finger_depth)
+ShapeGraspPlanner::ShapeGraspPlanner(ros::NodeHandle& nh)
 {
+  /*
+   * Gripper model is based on having two fingers, and assumes
+   * that the robot is using the moveit_simple_controller_manager
+   * gripper interface, with "parallel" parameter set to true.
+   */
+  nh.param<std::string>("gripper/left_joint", left_joint_, "l_gripper_finger_joint");
+  nh.param<std::string>("gripper/right_joint", right_joint_, "r_gripper_finger_joint");
+  nh.param("gripper/max_opening", max_opening_, 0.110);
+  nh.param("gripper/max_effort", max_effort_, 50.0);
+  nh.param("gripper/finger_depth", finger_depth_, 0.02);
+  nh.param("gripper/grasp_duration", grasp_duration_, 2.0);
+
+  /*
+   * Approach is usually aligned with wrist_roll
+   */
+  nh.param<std::string>("gripper/approach/frame", approach_frame_, "wrist_roll_link");
+  nh.param("gripper/approach/min", approach_min_translation_, 0.1);
+  nh.param("gripper/approach/desired", approach_desired_translation_, 0.15);
+
+  /*
+   * Retreat is usually aligned with wrist_roll
+   */
+  nh.param<std::string>("gripper/retreat/frame", retreat_frame_, "wrist_roll_link");
+  nh.param("gripper/retreat/min", retreat_min_translation_, 0.1);
+  nh.param("gripper/retreat/desired", retreat_desired_translation_, 0.15);
+
+  // Distance from tool point to planning frame
+  nh.param("gripper/tool_to_planning_frame", tool_offset_, 0.165);
 }
 
 int ShapeGraspPlanner::createGrasp(const geometry_msgs::PoseStamped& pose,
@@ -107,8 +116,13 @@ int ShapeGraspPlanner::createGrasp(const geometry_msgs::PoseStamped& pose,
   // defaults
   grasp.pre_grasp_posture = makeGraspPosture(max_opening_);
   grasp.grasp_posture = makeGraspPosture(0.0);
-  grasp.pre_grasp_approach = makeGripperTranslation("wrist_roll_link", 0.1, 0.15);
-  grasp.post_grasp_retreat = makeGripperTranslation("wrist_roll_link", 0.1, 0.15, -1.0);
+  grasp.pre_grasp_approach = makeGripperTranslation(approach_frame_,
+                                                    approach_min_translation_,
+                                                    approach_desired_translation_);
+  grasp.post_grasp_retreat = makeGripperTranslation(retreat_frame_,
+                                                    retreat_min_translation_,
+                                                    retreat_desired_translation_,
+                                                    -1.0);  // retreat is in negative x direction
 
   // initial pose
   Eigen::Affine3d p = Eigen::Translation3d(pose.pose.position.x,
@@ -122,8 +136,8 @@ int ShapeGraspPlanner::createGrasp(const geometry_msgs::PoseStamped& pose,
   p = p * Eigen::Translation3d(x_offset, 0, z_offset);
   // rotate by 0, pitch, 0
   p = p * quaternionFromEuler(0.0, gripper_pitch, 0.0);
-  // apply grasp point -> wrist_roll offset
-  p = p * Eigen::Translation3d(-0.160, 0, 0);
+  // apply grasp point -> planning frame offset
+  p = p * Eigen::Translation3d(-tool_offset_, 0, 0);
 
   grasp.grasp_pose.pose.position.x = p.translation().x();
   grasp.grasp_pose.pose.position.y = p.translation().y();
@@ -268,6 +282,22 @@ int ShapeGraspPlanner::plan(const grasping_msgs::Object& object,
 
   grasps = grasps_;
   return grasps.size();  // num of grasps
+}
+
+trajectory_msgs::JointTrajectory
+ShapeGraspPlanner::makeGraspPosture(double pose)
+{
+  trajectory_msgs::JointTrajectory trajectory;
+  trajectory.joint_names.push_back(left_joint_);
+  trajectory.joint_names.push_back(right_joint_);
+  trajectory_msgs::JointTrajectoryPoint point;
+  point.positions.push_back(pose/2.0);
+  point.positions.push_back(pose/2.0);
+  point.effort.push_back(max_effort_);
+  point.effort.push_back(max_effort_);
+  point.time_from_start = ros::Duration(grasp_duration_);
+  trajectory.points.push_back(point);
+  return trajectory;
 }
 
 }  // namespace simple_grasping

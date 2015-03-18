@@ -55,12 +55,6 @@ class BasicGraspingPerception
 public:
   BasicGraspingPerception(ros::NodeHandle n) : nh_(n), debug_(false), find_objects_(false)
   {
-    // Create planner
-    double opening, depth;
-    nh_.param("gripper_max_opening", opening, 0.09);
-    nh_.param("gripper_finger_depth", depth, 0.02);
-    planner_.reset(new ShapeGraspPlanner(opening, depth));
-
     // use_debug: enable/disable output of a cloud containing object points
     nh_.getParam("use_debug", debug_);
 
@@ -68,16 +62,11 @@ public:
     world_frame_ = "base_link";
     nh_.getParam("frame_id", world_frame_);
 
-    // cluster_tolerance: minimum separation distance of two objects
-    double cluster_tolerance = 0.01;
-    nh_.getParam("cluster_tolerance", cluster_tolerance);
-
-    // cluster_min_size: minimum size of an object
-    int cluster_min_size = 50;
-    nh_.getParam("cluster_min_size", cluster_min_size);
+    // Create planner
+    planner_.reset(new ShapeGraspPlanner(nh_));
 
     // Create perception
-    segmentation_.reset(new ObjectSupportSegmentation(cluster_tolerance, cluster_min_size));
+    segmentation_.reset(new ObjectSupportSegmentation(nh_));
 
     // Advertise an action for perception + planning
     server_.reset(new server_t(nh_, "find_objects",

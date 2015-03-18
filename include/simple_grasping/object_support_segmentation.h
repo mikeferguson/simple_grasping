@@ -46,27 +46,26 @@ namespace simple_grasping
 {
 
 /**
- *  \brief Class that segments a point cloud into objects and supporting surfaces.
+ *  @brief Class that segments a point cloud into objects and supporting surfaces.
  */  
 class ObjectSupportSegmentation
 {
 public:
 
   /**
-   *  \param cluster_tolerance The minimum separation between two objects.
-   *  \param cluster_min_size The minimum number of points in an object
+   *  @brief Constructor, loads pipeline using ROS parameters.
+   *  @param nh Node handle to use for accessing parameters.
    */
-  ObjectSupportSegmentation(double cluster_tolerance = 0.01,
-                            int cluster_min_size = 50);
+  ObjectSupportSegmentation(ros::NodeHandle& nh);
 
   /**
-   *  \brief Split a cloud into objects and supporting surfaces.
-   *  \param cloud The point cloud to segment. This cloud should already be
+   *  @brief Split a cloud into objects and supporting surfaces.
+   *  @param cloud The point cloud to segment. This cloud should already be
    *         transformed into a coordinate frame where XY plane is horizontal.
-   *  \param objects The vector to fill in with objects found.
-   *  \param supports The vector to fill in with support surfaces found.
-   *  \param object_cloud A colored cloud of objects found (if output_clouds).
-   *  \param support_cloud A colored cloud of supports found (if output_clouds).
+   *  @param objects The vector to fill in with objects found.
+   *  @param supports The vector to fill in with support surfaces found.
+   *  @param object_cloud A colored cloud of objects found (if output_clouds).
+   *  @param support_cloud A colored cloud of supports found (if output_clouds).
    */
   bool segment(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud,
                std::vector<grasping_msgs::Object>& objects,

@@ -1,4 +1,5 @@
 /*
+ * Copyright 2015, Fetch Robotics Inc.
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * All rights reserved.
  *
@@ -32,33 +33,37 @@
 #ifndef SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
 #define SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
 
+#include <ros/ros.h>
 #include <grasping_msgs/GraspableObject.h>
 
 namespace simple_grasping
 {
 
 /**
- *  \brief A simple grasp planner that uses the bounding box shape to
+ *  @brief A simple grasp planner that uses the bounding box shape to
  *         generate viable grasps.
  */
 class ShapeGraspPlanner
 {
 public:
-  ShapeGraspPlanner(double gripper_max_opening,
-                    double gripper_finger_depth);
+  /**
+   * @brief Constructor, loads grasp planner configuration from ROS params.
+   * @param nh Nodehandle to use for accessing grasp planner parameters.
+   */
+  ShapeGraspPlanner(ros::NodeHandle& nh);
 
   virtual int plan(const grasping_msgs::Object& object,
                    std::vector<moveit_msgs::Grasp>& grasps);
 
 private:
   /**
-   *  \brief Generate a grasp, add it to internal grasps_
-   *  \param pose The pose of the end effector tool point
-   *  \param gripper_pitch The pitch of the gripper on approach
-   *  \param x_offset The offset in the x direction (in).
-   *  \param z_offset The offset in the z direction (up).
-   *  \param quality The quality to ascribe to this grasp.
-   *  \returns The number of grasps generated.
+   *  @brief Generate a grasp, add it to internal grasps_
+   *  @param pose The pose of the end effector tool point
+   *  @param gripper_pitch The pitch of the gripper on approach
+   *  @param x_offset The offset in the x direction (in).
+   *  @param z_offset The offset in the z direction (up).
+   *  @param quality The quality to ascribe to this grasp.
+   *  @returns The number of grasps generated.
    */
   int createGrasp(const geometry_msgs::PoseStamped& pose,
                   double gripper_pitch,
@@ -67,21 +72,39 @@ private:
                   double quality);
 
   /**
-   *  \brief Generate a series of grasps around the edge of a shape
-   *  \param pose The pose of the end effector tool point.
-   *  \param depth The depth of the shape.
-   *  \param width The width of the shape.
-   *  \param height The height of the shape.
-   *  \param use_vertical Whether to include vertical poses. If coming
+   *  @brief Generate a series of grasps around the edge of a shape
+   *  @param pose The pose of the end effector tool point.
+   *  @param depth The depth of the shape.
+   *  @param width The width of the shape.
+   *  @param height The height of the shape.
+   *  @param use_vertical Whether to include vertical poses. If coming
    *         from two sides, the second call probably should not generate
    *         vertical poses.
-   *  \returns The number of grasps generated.
+   *  @returns The number of grasps generated.
    */
   int createGraspSeries(const geometry_msgs::PoseStamped& pose,
                         double depth, double width, double height,
                         bool use_vertical = true);
 
-  double max_opening_, finger_depth_;
+  trajectory_msgs::JointTrajectory makeGraspPosture(double pose);
+
+  // gripper model
+  std::string left_joint_, right_joint_;
+  double max_opening_;
+  double max_effort_;
+  double grasp_duration_;
+  double tool_offset_;
+  double finger_depth_;
+
+  // approach model
+  std::string approach_frame_;
+  double approach_min_translation_;
+  double approach_desired_translation_;
+
+  // retreat model
+  std::string retreat_frame_;
+  double retreat_min_translation_;
+  double retreat_desired_translation_;
 
   // storing of internal grasps as we generate them
   std::vector<moveit_msgs::Grasp> grasps_;
