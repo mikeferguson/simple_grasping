@@ -71,6 +71,16 @@ target_link_libraries(basic_grasping_perception
 )
 add_dependencies(basic_grasping_perception grasping_msgs_generate_messages_cpp)
 
+### Build grasp_planner_node
+add_executable(grasp_planner_node src/grasp_planner_node.cpp)
+target_link_libraries(grasp_planner_node
+  simple_grasping
+  ${Boost_LIBRARIES}
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+add_dependencies(grasp_planner_node grasping_msgs_generate_messages_cpp)
+
 ### Test
 if (CATKIN_ENABLE_TESTING)
 add_subdirectory(test)
@@ -83,7 +93,7 @@ install(
 )
 
 install(
-  TARGETS simple_grasping basic_grasping_perception
+  TARGETS simple_grasping basic_grasping_perception grasp_planner_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
