@@ -2,8 +2,8 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2015-04-05)
+------------------
 * create standalone grasp_planner_node
 * Contributors: Michael Ferguson
 
