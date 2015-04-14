@@ -66,6 +66,7 @@ private:
    *  @returns The number of grasps generated.
    */
   int createGrasp(const geometry_msgs::PoseStamped& pose,
+                  double gripper_opening,
                   double gripper_pitch,
                   double x_offset,
                   double z_offset,
@@ -95,6 +96,7 @@ private:
   double grasp_duration_;
   double tool_offset_;
   double finger_depth_;
+  double gripper_tolerance_;
 
   // approach model
   std::string approach_frame_;

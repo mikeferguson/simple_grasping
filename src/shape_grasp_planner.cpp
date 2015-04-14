@@ -85,6 +85,7 @@ ShapeGraspPlanner::ShapeGraspPlanner(ros::NodeHandle& nh)
   nh.param("gripper/max_effort", max_effort_, 50.0);
   nh.param("gripper/finger_depth", finger_depth_, 0.02);
   nh.param("gripper/grasp_duration", grasp_duration_, 2.0);
+  nh.param("gripper/gripper_tolerance", gripper_tolerance_, 0.02);
 
   /*
    * Approach is usually aligned with wrist_roll
@@ -105,6 +106,7 @@ ShapeGraspPlanner::ShapeGraspPlanner(ros::NodeHandle& nh)
 }
 
 int ShapeGraspPlanner::createGrasp(const geometry_msgs::PoseStamped& pose,
+                                   double gripper_opening,
                                    double gripper_pitch,
                                    double x_offset,
                                    double z_offset,
@@ -114,7 +116,7 @@ int ShapeGraspPlanner::createGrasp(const geometry_msgs::PoseStamped& pose,
   grasp.grasp_pose = pose;
 
   // defaults
-  grasp.pre_grasp_posture = makeGraspPosture(max_opening_);
+  grasp.pre_grasp_posture = makeGraspPosture(gripper_opening);
   grasp.grasp_posture = makeGraspPosture(0.0);
   grasp.pre_grasp_approach = makeGripperTranslation(approach_frame_,
                                                     approach_min_translation_,
@@ -176,34 +178,36 @@ int ShapeGraspPlanner::createGraspSeries(
   if (z > finger_depth_)
     z = finger_depth_ - z;
 
+  double open = std::min(width + gripper_tolerance_, max_opening_);
+
   // Grasp along top of box
   for (double step = 0.0; step < depth/2.0; step += 0.1)
   {
     if (use_vertical)
-      count += createGrasp(pose, 1.57, step, -z, 1.0 - 0.1*step);  // vertical
-    count += createGrasp(pose, 1.07, step, -z + 0.01, 0.7 - 0.1*step);  // slightly angled down
+      count += createGrasp(pose, open, 1.57, step, -z, 1.0 - 0.1*step);  // vertical
+    count += createGrasp(pose, open, 1.07, step, -z + 0.01, 0.7 - 0.1*step);  // slightly angled down
     if (step > 0.05)
     {
       if (use_vertical)
-        count += createGrasp(pose, 1.57, -step, -z, 1.0 - 0.1*step);
-      count += createGrasp(pose, 1.07, -step, -z + 0.01, 0.7 - 0.1*step);
+        count += createGrasp(pose, open, 1.57, -step, -z, 1.0 - 0.1*step);
+      count += createGrasp(pose, open, 1.07, -step, -z + 0.01, 0.7 - 0.1*step);
     }
   }
 
   // Grasp horizontally along side of box
   for (double step = 0.0; step < height/2.0; step += 0.1)
   {
-    count += createGrasp(pose, 0.0, x, step, 0.8 - 0.1*step);  // horizontal
-    count += createGrasp(pose, 0.5, x-0.01, step, 0.6 - 0.1*step);  // slightly angled up
+    count += createGrasp(pose, open, 0.0, x, step, 0.8 - 0.1*step);  // horizontal
+    count += createGrasp(pose, open, 0.5, x-0.01, step, 0.6 - 0.1*step);  // slightly angled up
     if (step > 0.05)
     {
-      count += createGrasp(pose, 0.0, x, -step, 0.8 - 0.1*step);
-      count += createGrasp(pose, 0.5, x-0.01, -step, 0.6 - 0.1*step);
+      count += createGrasp(pose, open, 0.0, x, -step, 0.8 - 0.1*step);
+      count += createGrasp(pose, open, 0.5, x-0.01, -step, 0.6 - 0.1*step);
     }
   }
 
   // A grasp on the corner of the box
-  count += createGrasp(pose, 1.57/2.0, x - 0.005, -z + 0.005, 0.25);
+  count += createGrasp(pose, open, 1.57/2.0, x - 0.005, -z + 0.005, 0.25);
 
   return count;
 }
