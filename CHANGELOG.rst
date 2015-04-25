@@ -2,8 +2,8 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.2 (2015-04-24)
+------------------
 * parameterize gripper opening tolerance
 * Contributors: Michael Ferguson
 
