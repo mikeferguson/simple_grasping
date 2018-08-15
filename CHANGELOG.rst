@@ -2,8 +2,8 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.1 (2018-08-14)
+------------------
 * insert proper key name
 * Contributors: Michael Ferguson
 
