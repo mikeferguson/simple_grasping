@@ -2,8 +2,8 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2018-08-14)
+------------------
 * Merge pull request `#4 <https://github.com/mikeferguson/simple_grasping/issues/4>`_ from mikaelarguedas/patch-1
   add libvtk6-qt-dev dependency to build on Debian Stretch
 * add libvtk6-qt-dev dependency to build on Debian Stretch
