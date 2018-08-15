@@ -2,6 +2,14 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#4 <https://github.com/mikeferguson/simple_grasping/issues/4>`_ from mikaelarguedas/patch-1
+  add libvtk6-qt-dev dependency to build on Debian Stretch
+* add libvtk6-qt-dev dependency to build on Debian Stretch
+  the `libpcl-dev` package is missing a dependency causing the `Qt5::Widgets` target to be exported but not satisfied.
+* Contributors: Michael Ferguson, Mikael Arguedas
+
 0.2.2 (2015-04-24)
 ------------------
 * parameterize gripper opening tolerance
