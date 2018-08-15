@@ -2,6 +2,11 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* insert proper key name
+* Contributors: Michael Ferguson
+
 0.3.0 (2018-08-14)
 ------------------
 * Merge pull request `#4 <https://github.com/mikeferguson/simple_grasping/issues/4>`_ from mikaelarguedas/patch-1
