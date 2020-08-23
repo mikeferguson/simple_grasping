@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2013-2014, Unbounded Robotics Inc. 
  * Copyright 2011, Willow Garage, Inc. (hsv2rgb)
  * All rights reserved.
@@ -30,7 +31,8 @@
 
 // Author: Michael Ferguson
 
-#include <simple_grasping/cloud_tools.h>
+#include "simple_grasping/cloud_tools.h"
+#include <pcl/common/io.h>
 
 namespace simple_grasping
 {

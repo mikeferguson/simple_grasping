@@ -1,7 +1,7 @@
 /*
+ * Copyright 2013-2020, Michael E. Ferguson
  * Copyright 2015, Fetch Robotics Inc.
  * Copyright 2014, Unbounded Robotics Inc.
- * Copyright 2013, Michael E. Ferguson
  * All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,9 @@
 #include <Eigen/Eigen>
 #include <boost/lexical_cast.hpp>
 
-#include <ros/ros.h>
+#include <pcl/common/centroid.h>
+#include <pcl_conversions/pcl_conversions.h>
+
 #include <simple_grasping/cloud_tools.h>
 #include <simple_grasping/shape_extraction.h>
 #include <simple_grasping/object_support_segmentation.h>
@@ -40,27 +42,28 @@
 namespace simple_grasping
 {
 
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("object_support_segmentation");
+
 ObjectSupportSegmentation::ObjectSupportSegmentation(
-  ros::NodeHandle& nh)
+  rclcpp::Node::SharedPtr node)
 {
+  // Save clock
+  clock_ = node->get_clock();
 
   // cluster_tolerance: minimum separation distance of two objects
-  double cluster_tolerance;
-  nh.param<double>("cluster_tolerance", cluster_tolerance, 0.01);
+  double cluster_tolerance = node->declare_parameter<double>("cluster_tolerance", 0.01);
   extract_clusters_.setClusterTolerance(cluster_tolerance);
 
   // cluster_min_size: minimum size of an object
-  int cluster_min_size;
-  nh.param<int>("cluster_min_size", cluster_min_size, 50);
+  int cluster_min_size = node->declare_parameter<int>("cluster_min_size", 50);
   extract_clusters_.setMinClusterSize(cluster_min_size);
 
   // voxel grid the data before segmenting
   double leaf_size, llimit, ulimit;
-  std::string field;
-  nh.param<double>("voxel_leaf_size", leaf_size, 0.005);
-  nh.param<double>("voxel_limit_min", llimit, 0.0);
-  nh.param<double>("voxel_limit_max", ulimit, 1.8);
-  nh.param<std::string>("voxel_field_name", field, "z");
+  leaf_size = node->declare_parameter<double>("voxel_leaf_size", 0.005);
+  llimit = node->declare_parameter<double>("voxel_limit_min", 0.0);
+  ulimit = node->declare_parameter<double>("voxel_limit_max", 1.8);
+  std::string field = node->declare_parameter<std::string>("voxel_field_name", "z");
   voxel_grid_.setLeafSize(leaf_size, leaf_size, leaf_size);
   voxel_grid_.setFilterFieldName(field);
   voxel_grid_.setFilterLimits(llimit, ulimit);
@@ -74,20 +77,20 @@ ObjectSupportSegmentation::ObjectSupportSegmentation(
 
 bool ObjectSupportSegmentation::segment(
   const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud,
-  std::vector<grasping_msgs::Object>& objects,
-  std::vector<grasping_msgs::Object>& supports,
+  std::vector<grasping_msgs::msg::Object>& objects,
+  std::vector<grasping_msgs::msg::Object>& supports,
   pcl::PointCloud<pcl::PointXYZRGB>& object_cloud,
   pcl::PointCloud<pcl::PointXYZRGB>& support_cloud,
   bool output_clouds)
 {
-  ROS_INFO("object support segmentation starting...");
+  RCLCPP_INFO(LOGGER, "object support segmentation starting...");
 
   // process the cloud with a voxel grid
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
   voxel_grid_.setInputCloud(cloud);
   voxel_grid_.filter(*cloud_filtered);
-  ROS_DEBUG("object_support_segmentation",
-            "Filtered for transformed Z, now %d points.", static_cast<int>(cloud_filtered->points.size()));
+  RCLCPP_DEBUG(LOGGER, "Filtered for transformed Z, now %d points.",
+               static_cast<int>(cloud_filtered->points.size()));
 
   // remove support planes
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr non_horizontal_planes(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -103,7 +106,7 @@ bool ObjectSupportSegmentation::segment(
     segment_.segment(*inliers, *coefficients);
     if (inliers->indices.size() < (size_t) thresh)  // TODO: make configurable? TODO make this based on "can we grasp object"
     {
-      ROS_DEBUG("object_support_segmentation", "No more planes to remove.");
+      RCLCPP_DEBUG(LOGGER, "No more planes to remove.");
       break;
     }
 
@@ -120,17 +123,17 @@ bool ObjectSupportSegmentation::segment(
     float angle = acos(Eigen::Vector3f::UnitZ().dot(normal));
     if (angle < 0.15)
     {
-      ROS_DEBUG("object_support_segmentation",
-                "Removing a plane with %d points.", static_cast<int>(inliers->indices.size()));
+      RCLCPP_DEBUG(LOGGER,
+                   "Removing a plane with %d points.", static_cast<int>(inliers->indices.size()));
 
       // new support object, with cluster, bounding box, and plane
-      grasping_msgs::Object object;
+      grasping_msgs::msg::Object object;
       pcl::toROSMsg(plane, object.point_cluster);
       // give the object a temporary name
       object.name = std::string("surface") + boost::lexical_cast<std::string>(supports.size());
       // add shape and pose
-      shape_msgs::SolidPrimitive box;
-      geometry_msgs::Pose pose;
+      shape_msgs::msg::SolidPrimitive box;
+      geometry_msgs::msg::Pose pose;
       extractUnorientedBoundingBox(plane, box, pose);
       object.primitives.push_back(box);
       object.primitive_poses.push_back(pose);
@@ -138,15 +141,15 @@ bool ObjectSupportSegmentation::segment(
       for (int i = 0; i < 4; ++i)
         object.surface.coef[i] = coefficients->values[i];
       // stamp and frame
-      object.header.stamp = ros::Time::now();
+      object.header.stamp = clock_->now();
       object.header.frame_id = cloud->header.frame_id;
       // add support surface to object list
       supports.push_back(object);
 
       if (output_clouds)
       {
-        ROS_DEBUG("object_support_segmentation",
-                  "Adding support cluster of size %d.", static_cast<int>(plane.points.size()));
+        RCLCPP_DEBUG(LOGGER,
+                     "Adding support cluster of size %d.", static_cast<int>(plane.points.size()));
         float hue = (360.0 / 8) * supports.size();
         colorizeCloud(plane, hue);
         support_cloud += plane;
@@ -158,8 +161,7 @@ bool ObjectSupportSegmentation::segment(
     else
     {
       // Add plane to temporary point cloud so we can recover points for object extraction below
-      ROS_DEBUG("object_support_segmentation",
-                "Plane is not horizontal");
+      RCLCPP_DEBUG(LOGGER, "Plane is not horizontal");
       *non_horizontal_planes += plane;
     }
 
@@ -167,8 +169,8 @@ bool ObjectSupportSegmentation::segment(
     extract.setNegative(true);
     extract.filter(*cloud_filtered);
   }
-  ROS_DEBUG("object_support_segmentation",
-            "Cloud now %d points.", static_cast<int>(cloud_filtered->points.size()));
+  RCLCPP_DEBUG(LOGGER,
+               "Cloud now %d points.", static_cast<int>(cloud_filtered->points.size()));
 
   // Add the non-horizontal planes back in
   *cloud_filtered += *non_horizontal_planes;
@@ -177,8 +179,7 @@ bool ObjectSupportSegmentation::segment(
   std::vector<pcl::PointIndices> clusters;
   extract_clusters_.setInputCloud(cloud_filtered);
   extract_clusters_.extract(clusters);
-  ROS_DEBUG("object_support_segmentation",
-            "Extracted %d clusters.", static_cast<int>(clusters.size()));
+  RCLCPP_DEBUG(LOGGER, "Extracted %d clusters.", static_cast<int>(clusters.size()));
 
   extract_indices_.setInputCloud(cloud_filtered);
   for (size_t i= 0; i < clusters.size(); i++)
@@ -207,40 +208,39 @@ bool ObjectSupportSegmentation::segment(
 
     if (support_plane_index == -1)
     {
-      ROS_DEBUG("object_support_segmentation",
-                "No support plane found for object");
+      RCLCPP_DEBUG(LOGGER, "No support plane found for object");
       continue;
     }
 
     // new object, with cluster and bounding box
-    grasping_msgs::Object object;
+    grasping_msgs::msg::Object object;
     // set name of supporting surface
     object.support_surface = std::string("surface") + boost::lexical_cast<std::string>(support_plane_index);
     // add shape, pose and transformed cluster
-    shape_msgs::SolidPrimitive box;
-    geometry_msgs::Pose pose;
+    shape_msgs::msg::SolidPrimitive box;
+    geometry_msgs::msg::Pose pose;
     pcl::PointCloud<pcl::PointXYZRGB> projected_cloud;
     extractShape(new_cloud, plane_coefficients[support_plane_index], projected_cloud, box, pose);
     pcl::toROSMsg(projected_cloud, object.point_cluster);
     object.primitives.push_back(box);
     object.primitive_poses.push_back(pose);
     // add stamp and frame
-    object.header.stamp = ros::Time::now();
+    object.header.stamp = clock_->now();
     object.header.frame_id = cloud->header.frame_id;
     // add object to object list
     objects.push_back(object);
 
     if (output_clouds)
     {
-      ROS_DEBUG("object_support_segmentation",
-                "Adding an object cluster of size %d.", static_cast<int>(new_cloud.points.size()));
+      RCLCPP_DEBUG(LOGGER, "Adding an object cluster of size %d.",
+                   static_cast<int>(new_cloud.points.size()));
       float hue = (360.0 / clusters.size()) * i;
       colorizeCloud(new_cloud, hue);
       object_cloud += new_cloud;
     }
   }
 
-  ROS_INFO("object support segmentation done processing.");
+  RCLCPP_INFO(LOGGER, "object support segmentation done processing.");
   return true;
 }
 

@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * All rights reserved.
  *
@@ -31,6 +32,7 @@
 
 #include <math.h>
 #include <Eigen/Eigen>
+#include <pcl/ModelCoefficients.h>
 #include <pcl/filters/project_inliers.h>
 #include <pcl/surface/convex_hull.h>
 #include <simple_grasping/shape_extraction.h>
@@ -41,8 +43,8 @@ namespace simple_grasping
 bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
                   const pcl::ModelCoefficients::Ptr model,
                   pcl::PointCloud<pcl::PointXYZRGB>& output,
-                  shape_msgs::SolidPrimitive& shape,
-                  geometry_msgs::Pose& pose)
+                  shape_msgs::msg::SolidPrimitive& shape,
+                  geometry_msgs::msg::Pose& pose)
 {
   // Used to decide between various shapes
   double min_volume = 1000.0;  // the minimum volume shape found thus far.
@@ -89,7 +91,7 @@ bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
   convex_hull.reconstruct(hull);
 
   // Try fitting a rectangle
-  shape_msgs::SolidPrimitive rect;  // the best-fit rectangle
+  shape_msgs::msg::SolidPrimitive rect;  // the best-fit rectangle
   rect.type = rect.BOX;
   rect.dimensions.resize(3);
   for (size_t i = 0; i < hull.size() - 1; ++i)
@@ -173,7 +175,7 @@ bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
   }
 
   // Try fitting a cylinder
-  shape_msgs::SolidPrimitive cylinder;  // the best-fit cylinder
+  shape_msgs::msg::SolidPrimitive cylinder;  // the best-fit cylinder
   cylinder.type = cylinder.CYLINDER;
   cylinder.dimensions.resize(2);
   for (size_t i = 0; i < hull.size(); ++i)
@@ -231,8 +233,8 @@ bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
 
 bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
                   pcl::PointCloud<pcl::PointXYZRGB>& output,
-                  shape_msgs::SolidPrimitive& shape,
-                  geometry_msgs::Pose& pose)
+                  shape_msgs::msg::SolidPrimitive& shape,
+                  geometry_msgs::msg::Pose& pose)
 {
   // Find lowest point, use as z height
   pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
@@ -251,8 +253,8 @@ bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
 }
 
 bool extractUnorientedBoundingBox(const pcl::PointCloud<pcl::PointXYZRGB>& input,
-                                  shape_msgs::SolidPrimitive& shape,
-                                  geometry_msgs::Pose& pose)
+                                  shape_msgs::msg::SolidPrimitive& shape,
+                                  geometry_msgs::msg::Pose& pose)
 {
   double x_min = 1000.0;
   double x_max = -1000.0;

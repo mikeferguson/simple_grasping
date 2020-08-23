@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * Copyright 2011, Willow Garage, Inc. (hsv2rgb)
  * All rights reserved.
@@ -35,9 +36,9 @@
 
 #include <Eigen/Eigen>
 
+#include <pcl/pcl_base.h>
 #include <pcl/point_types.h>
-#include <pcl_ros/point_cloud.h>
-#include <pcl_ros/transforms.h>
+#include <pcl/ModelCoefficients.h>
 
 #include <vector>
 

@@ -1,6 +1,6 @@
 /*
+ * Copyright (c) 2013-2020 Michael E. Ferguson
  * Copyright (c) 2014, Unbounded Robotics Inc.
- * Copyright (c) 2013, Michael E. Ferguson
  * All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,8 @@
 
 #include <vector>
 
-#include <grasping_msgs/Object.h>
+#include "rclcpp/rclcpp.hpp"
+#include <grasping_msgs/msg/object.hpp>
 
 #include <pcl/io/io.h>
 #include <pcl/point_types.h>
@@ -54,9 +55,9 @@ public:
 
   /**
    *  @brief Constructor, loads pipeline using ROS parameters.
-   *  @param nh Node handle to use for accessing parameters.
+   *  @param node Node instance to use for accessing parameters.
    */
-  ObjectSupportSegmentation(ros::NodeHandle& nh);
+  ObjectSupportSegmentation(rclcpp::Node::SharedPtr node);
 
   /**
    *  @brief Split a cloud into objects and supporting surfaces.
@@ -68,8 +69,8 @@ public:
    *  @param support_cloud A colored cloud of supports found (if output_clouds).
    */
   bool segment(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud,
-               std::vector<grasping_msgs::Object>& objects,
-               std::vector<grasping_msgs::Object>& supports,
+               std::vector<grasping_msgs::msg::Object>& objects,
+               std::vector<grasping_msgs::msg::Object>& supports,
                pcl::PointCloud<pcl::PointXYZRGB>& object_cloud,
                pcl::PointCloud<pcl::PointXYZRGB>& support_cloud,
                bool output_clouds);
@@ -79,6 +80,8 @@ private:
   pcl::SACSegmentation<pcl::PointXYZRGB> segment_;
   pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> extract_clusters_;
   pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_;
+
+  rclcpp::Clock::SharedPtr clock_;
 };
 
 }  // namespace simple_grasping

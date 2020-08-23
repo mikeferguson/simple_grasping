@@ -1,89 +1,79 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(simple_grasping)
 
-find_package(Boost REQUIRED)
+#find_package(Boost REQUIRED)
 find_package(PCL REQUIRED)
-find_package(catkin REQUIRED
-  COMPONENTS
-    actionlib
-    cmake_modules
-    geometry_msgs
-    grasping_msgs
-    message_generation
-    moveit_msgs
-    pcl_ros
-    roscpp
-    sensor_msgs
-    shape_msgs
-    tf
-)
-find_package(Eigen REQUIRED)
-
-link_directories(
-  ${catkin_LIBRARY_DIRS}
-  ${Boost_LIBRARY_DIRS}
-  ${PCL_LIBRARY_DIRS}
-)
-
-catkin_package(
-  CATKIN_DEPENDS
-    actionlib
-    geometry_msgs
-    grasping_msgs
-    moveit_msgs
-    pcl_ros
-    sensor_msgs
-    shape_msgs
-  INCLUDE_DIRS include
-  LIBRARIES
-    simple_grasping
-)
+find_package(Eigen3 REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(grasping_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(pcl_ros REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(shape_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 include_directories(
   include
-  SYSTEM
-  ${Boost_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 )
 
+set(common_depends
+  geometry_msgs
+  grasping_msgs
+  pcl_conversions
+  pcl_ros
+  rclcpp
+  rclcpp_action
+  sensor_msgs
+  shape_msgs
+  tf2_ros
+)
+
 ### Build simple_grasping library
-add_library(simple_grasping
+add_library(simple_grasping SHARED
   src/cloud_tools.cpp
   src/object_support_segmentation.cpp
   src/shape_extraction.cpp
   src/shape_grasp_planner.cpp
 )
-target_link_libraries(simple_grasping
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
+ament_target_dependencies(simple_grasping ${common_depends})
+target_link_libraries(simple_grasping ${PCL_LIBRARIES})
 
 ### Build basic_grasping_perception
-add_executable(basic_grasping_perception src/basic_grasping_perception.cpp)
-target_link_libraries(basic_grasping_perception
-  simple_grasping
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
+add_library(basic_grasping_perception SHARED
+  src/basic_grasping_perception.cpp
 )
-add_dependencies(basic_grasping_perception grasping_msgs_generate_messages_cpp)
+ament_target_dependencies(basic_grasping_perception ${common_depends})
+target_link_libraries(basic_grasping_perception simple_grasping ${PCL_LIBRARIES})
+rclcpp_components_register_node(basic_grasping_perception
+  PLUGIN "simple_grasping::BasicGraspingPerception"
+  EXECUTABLE basic_grasping_perception_node
+)
 
 ### Build grasp_planner_node
-add_executable(grasp_planner_node src/grasp_planner_node.cpp)
-target_link_libraries(grasp_planner_node
-  simple_grasping
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
+add_library(grasp_planner SHARED
+  src/grasp_planner_node.cpp
 )
-add_dependencies(grasp_planner_node grasping_msgs_generate_messages_cpp)
+ament_target_dependencies(grasp_planner ${common_depends})
+target_link_libraries(grasp_planner simple_grasping ${PCL_LIBRARIES})
+rclcpp_components_register_node(grasp_planner
+  PLUGIN "simple_grasping::GraspPlannerNode"
+  EXECUTABLE grasp_planner_node
+)
 
 ### Test
-if (CATKIN_ENABLE_TESTING)
-add_subdirectory(test)
+if (BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(simple_grasping_test_shape_extraction
+    test/test_shape_extraction.cpp
+  )
+  ament_target_dependencies(simple_grasping_test_shape_extraction ${common_depends})
+  target_link_libraries(simple_grasping_test_shape_extraction simple_grasping ${PCL_LIBRARIES})
 endif()
 
 ### Install
@@ -93,7 +83,26 @@ install(
 )
 
 install(
-  TARGETS simple_grasping basic_grasping_perception grasp_planner_node
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  TARGETS
+    simple_grasping
+    basic_grasping_perception
+    grasp_planner
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PACKAGE_NAME}
 )
+
+ament_export_include_directories(include)
+ament_export_libraries(simple_grasping)
+ament_export_dependencies(
+  geometry_msgs
+  grasping_msgs
+  pcl_conversions
+  pcl_ros
+  rclcpp
+  rclcpp_action
+  sensor_msgs
+  shape_msgs
+  tf2_ros
+)
+ament_package()
