@@ -74,7 +74,7 @@ public:
     clock_ = this->get_clock();
 
     // use_debug: enable/disable output of a cloud containing object points
-    debug_ = this->declare_parameter<bool>("use_debug", false);
+    debug_ = this->declare_parameter<bool>("debug_topics", false);
 
     // frame_id: frame to transform cloud to (should be XY horizontal)
     world_frame_ = this->declare_parameter<std::string>("frame_id", "base_link");
@@ -82,10 +82,12 @@ public:
     // Publish debugging views
     if (debug_)
     {
+      rclcpp::QoS qos(1);
+      qos.best_effort();
       object_cloud_pub_ =
-        this->create_publisher<sensor_msgs::msg::PointCloud2>("object_cloud", 1);
+        this->create_publisher<sensor_msgs::msg::PointCloud2>("object_cloud", qos);
       support_cloud_pub_ =
-        this->create_publisher<sensor_msgs::msg::PointCloud2>("support_cloud", 1);
+        this->create_publisher<sensor_msgs::msg::PointCloud2>("support_cloud", qos);
     }
 
     // Range filter for cloud
@@ -97,9 +99,11 @@ public:
     listener_.reset(new tf2_ros::TransformListener(*buffer_));
 
     // Subscribe to head camera cloud
+    rclcpp::QoS points_qos(10);
+    points_qos.best_effort();
     cloud_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       "/head_camera/depth_registered/points",
-      1,
+      points_qos,
       std::bind(&BasicGraspingPerception::cloud_callback, this, _1));
 
     // Setup actionlib server
@@ -170,7 +174,7 @@ private:
       pcl::toROSMsg(object_cloud, cloud_msg);
       object_cloud_pub_->publish(cloud_msg);
 
-      pcl::toROSMsg(object_cloud, cloud_msg);
+      pcl::toROSMsg(support_cloud, cloud_msg);
       support_cloud_pub_->publish(cloud_msg);
     }
 
