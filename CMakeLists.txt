@@ -86,6 +86,12 @@ install(
 )
 
 install(
+  PROGRAMS
+    scripts/do_perception.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
   TARGETS
     simple_grasping
     basic_grasping_perception

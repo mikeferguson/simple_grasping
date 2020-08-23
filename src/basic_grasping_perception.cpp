@@ -197,8 +197,6 @@ private:
 
   void handle_accepted(const std::shared_ptr<FindGraspableObjectsGoal> goal_handle)
   {
-    auto result = std::make_shared<FindGraspableObjectsAction::Result>();
-
     if (!planner_ || !segmentation_)
     {
       // Create planner
@@ -206,6 +204,14 @@ private:
       // Create perception
       segmentation_.reset(new ObjectSupportSegmentation(this->shared_from_this()));
     }
+
+    // Break off a thread
+    std::thread{std::bind(&BasicGraspingPerception::execute, this, _1), goal_handle}.detach();
+  }
+
+  void execute(const std::shared_ptr<FindGraspableObjectsGoal> goal_handle)
+  {
+    auto result = std::make_shared<FindGraspableObjectsAction::Result>();
 
     // Get objects
     find_objects_ = true;
