@@ -30,6 +30,10 @@
 
 // Author: Michael Ferguson
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "tf2_ros/transform_listener.h"
@@ -43,7 +47,6 @@
 #include "pcl_ros/transforms.hpp"
 #include "pcl/common/io.h"
 #include "pcl/filters/passthrough.h"
-#include "pcl_conversions/pcl_conversions.h"
 
 namespace simple_grasping
 {
@@ -62,7 +65,7 @@ class BasicGraspingPerception : public rclcpp::Node
   using FindGraspableObjectsGoal = rclcpp_action::ServerGoalHandle<FindGraspableObjectsAction>;
 
 public:
-  BasicGraspingPerception(const rclcpp::NodeOptions& options)
+  explicit BasicGraspingPerception(const rclcpp::NodeOptions& options)
   : rclcpp::Node("basic_grasping_perception", options),
     debug_(false),
     find_objects_(false)
@@ -79,8 +82,10 @@ public:
     // Publish debugging views
     if (debug_)
     {
-      object_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("object_cloud", 1);
-      support_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("support_cloud", 1);
+      object_cloud_pub_ =
+        this->create_publisher<sensor_msgs::msg::PointCloud2>("object_cloud", 1);
+      support_cloud_pub_ =
+        this->create_publisher<sensor_msgs::msg::PointCloud2>("support_cloud", 1);
     }
 
     // Range filter for cloud
@@ -108,7 +113,7 @@ public:
       std::bind(&BasicGraspingPerception::handle_cancel, this, _1),
       std::bind(&BasicGraspingPerception::handle_accepted, this, _1)
     );
-  
+
     RCLCPP_INFO(LOGGER, "basic_grasping_perception initialized");
   }
 
@@ -120,7 +125,8 @@ private:
       return;
 
     // Convert to point cloud
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud =
+      boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
     pcl::fromROSMsg(*msg, *cloud);
 
     RCLCPP_DEBUG(LOGGER, "Cloud recieved with %d points.", static_cast<int>(cloud->points.size()));
@@ -129,7 +135,8 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
     range_filter_.setInputCloud(cloud);
     range_filter_.filter(*cloud_filtered);
-    RCLCPP_DEBUG(LOGGER, "Filtered for range, now %d points.", static_cast<int>(cloud_filtered->points.size()));
+    RCLCPP_DEBUG(LOGGER, "Filtered for range, now %d points.",
+                 static_cast<int>(cloud_filtered->points.size()));
 
     // Transform to grounded
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -149,7 +156,12 @@ private:
       object_cloud.header.frame_id = cloud_transformed->header.frame_id;
       support_cloud.header.frame_id = cloud_transformed->header.frame_id;
     }
-    segmentation_->segment(cloud_transformed, objects_, supports_, object_cloud, support_cloud, debug_);
+    segmentation_->segment(cloud_transformed,
+                           objects_,
+                           supports_,
+                           object_cloud,
+                           support_cloud,
+                           debug_);
 
     if (debug_)
     {
@@ -207,7 +219,7 @@ private:
     }
 
     const auto goal = goal_handle->get_goal();
-    
+
     // Set object results
     for (size_t i = 0; i < objects_.size(); ++i)
     {

@@ -31,11 +31,12 @@
 // Author: Michael Ferguson
 
 #include <math.h>
+
 #include <Eigen/Eigen>
-#include <pcl/ModelCoefficients.h>
-#include <pcl/filters/project_inliers.h>
-#include <pcl/surface/convex_hull.h>
-#include <simple_grasping/shape_extraction.h>
+#include "pcl/ModelCoefficients.h"
+#include "pcl/filters/project_inliers.h"
+#include "pcl/surface/convex_hull.h"
+#include "simple_grasping/shape_extraction.h"
 
 namespace simple_grasping
 {
@@ -218,7 +219,7 @@ bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
     }
   }
 
-  // TODO: Try fitting a sphere?
+  // TODO(enhancement): Try fitting a sphere?
 
   // Project input to new frame
   Eigen::Vector3f origin(pose.position.x, pose.position.y, pose.position.z);

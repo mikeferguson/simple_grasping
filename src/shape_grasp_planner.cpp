@@ -31,8 +31,13 @@
 
 // Author: Michael Ferguson
 
+#include "simple_grasping/shape_grasp_planner.h"
+
 #include <Eigen/Eigen>
-#include <simple_grasping/shape_grasp_planner.h>
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
 
 using shape_msgs::msg::SolidPrimitive;
 
@@ -69,7 +74,7 @@ Eigen::Quaterniond quaternionFromEuler(float yaw, float pitch, float roll)
   float x = sr*cp*cy - cr*sp*sy;
   float y = cr*sp*cy + sr*cp*sy;
   float z = cr*cp*sy - sr*sp*cy;
-  return Eigen::Quaterniond(w,x,y,z);
+  return Eigen::Quaterniond(w, x, y, z);
 }
 
 ShapeGraspPlanner::ShapeGraspPlanner(rclcpp::Node::SharedPtr node)
@@ -79,8 +84,10 @@ ShapeGraspPlanner::ShapeGraspPlanner(rclcpp::Node::SharedPtr node)
    * that the robot is using the moveit_simple_controller_manager
    * gripper interface, with "parallel" parameter set to true.
    */
-  left_joint_ = node->declare_parameter<std::string>("gripper/left_joint", "l_gripper_finger_joint");
-  right_joint_ = node->declare_parameter<std::string>("gripper/right_joint", "r_gripper_finger_joint");
+  left_joint_ = node->declare_parameter<std::string>("gripper/left_joint",
+                                                     "l_gripper_finger_joint");
+  right_joint_ = node->declare_parameter<std::string>("gripper/right_joint",
+                                                      "r_gripper_finger_joint");
   max_opening_ = node->declare_parameter<double>("gripper/max_opening", 0.110);
   max_effort_ = node->declare_parameter<double>("gripper/max_effort", 50.0);
   finger_depth_ = node->declare_parameter<double>("gripper/finger_depth", 0.02);
@@ -90,9 +97,11 @@ ShapeGraspPlanner::ShapeGraspPlanner(rclcpp::Node::SharedPtr node)
   /*
    * Approach is usually aligned with wrist_roll
    */
-  approach_frame_ = node->declare_parameter<std::string>("gripper/approach/frame", "wrist_roll_link");
+  approach_frame_ = node->declare_parameter<std::string>("gripper/approach/frame",
+                                                         "wrist_roll_link");
   approach_min_translation_ = node->declare_parameter<double>("gripper/approach/min", 0.1);
-  approach_desired_translation_ = node->declare_parameter<double>("gripper/approach/desired", 0.15);
+  approach_desired_translation_ = node->declare_parameter<double>("gripper/approach/desired",
+                                                                  0.15);
 
   /*
    * Retreat is usually aligned with wrist_roll
@@ -185,7 +194,7 @@ int ShapeGraspPlanner::createGraspSeries(
   {
     if (use_vertical)
       count += createGrasp(pose, open, 1.57, step, -z, 1.0 - 0.1*step);  // vertical
-    count += createGrasp(pose, open, 1.07, step, -z + 0.01, 0.7 - 0.1*step);  // slightly angled down
+    count += createGrasp(pose, open, 1.07, step, -z + 0.01, 0.7 - 0.1*step);  // angled down
     if (step > 0.05)
     {
       if (use_vertical)
@@ -198,7 +207,7 @@ int ShapeGraspPlanner::createGraspSeries(
   for (double step = 0.0; step < height/2.0; step += 0.1)
   {
     count += createGrasp(pose, open, 0.0, x, step, 0.8 - 0.1*step);  // horizontal
-    count += createGrasp(pose, open, 0.5, x-0.01, step, 0.6 - 0.1*step);  // slightly angled up
+    count += createGrasp(pose, open, 0.5, x-0.01, step, 0.6 - 0.1*step);  // angled up
     if (step > 0.05)
     {
       count += createGrasp(pose, open, 0.0, x, -step, 0.8 - 0.1*step);
@@ -215,7 +224,7 @@ int ShapeGraspPlanner::createGraspSeries(
 int ShapeGraspPlanner::plan(const grasping_msgs::msg::Object& object,
                             std::vector<moveit_msgs::msg::Grasp>& grasps)
 {
-  //ROS_INFO("shape grasp planning starting...");
+  // ROS_INFO("shape grasp planning starting...");
 
   // Need a shape primitive
   if (object.primitives.size() == 0)
@@ -282,7 +291,7 @@ int ShapeGraspPlanner::plan(const grasping_msgs::msg::Object& object,
     std::swap(x, y);
   }
 
-  //ROS_INFO("shape grasp planning done.");
+  // ROS_INFO("shape grasp planning done.");
 
   grasps = grasps_;
   return grasps.size();  // num of grasps

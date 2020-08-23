@@ -32,14 +32,17 @@
 // Author: Michael Ferguson
 
 #include "simple_grasping/cloud_tools.h"
-#include <pcl/common/io.h>
+
+#include <vector>
+
+#include "pcl/common/io.h"
 
 namespace simple_grasping
 {
 
 // http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
 // for points on a dark background you want somewhat lightened
-// colors generally... back off the saturation (s)      
+// colors generally... back off the saturation (s)
 void hsv2rgb(const float h, const float s, const float v, float& r, float& g, float& b)
 {
   float c = v * s;

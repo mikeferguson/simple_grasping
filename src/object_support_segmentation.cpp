@@ -29,15 +29,19 @@
 
 // Author: Michael Ferguson
 
+#include "simple_grasping/object_support_segmentation.h"
+
 #include <Eigen/Eigen>
-#include <boost/lexical_cast.hpp>
+#include <vector>
+#include <string>
 
-#include <pcl/common/centroid.h>
-#include <pcl_conversions/pcl_conversions.h>
+#include "boost/lexical_cast.hpp"
 
-#include <simple_grasping/cloud_tools.h>
-#include <simple_grasping/shape_extraction.h>
-#include <simple_grasping/object_support_segmentation.h>
+#include "pcl/common/centroid.h"
+#include "pcl_conversions/pcl_conversions.h"
+
+#include "simple_grasping/cloud_tools.h"
+#include "simple_grasping/shape_extraction.h"
 
 namespace simple_grasping
 {
@@ -93,7 +97,8 @@ bool ObjectSupportSegmentation::segment(
                static_cast<int>(cloud_filtered->points.size()));
 
   // remove support planes
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr non_horizontal_planes(new pcl::PointCloud<pcl::PointXYZRGB>);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr non_horizontal_planes;
+  non_horizontal_planes = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
   std::vector<pcl::ModelCoefficients::Ptr> plane_coefficients;  // coefs of all planes found
   int thresh = cloud_filtered->points.size()/8;
   while (cloud_filtered->points.size() > 500)
@@ -104,7 +109,9 @@ bool ObjectSupportSegmentation::segment(
     // Segment the largest planar component from the remaining cloud
     segment_.setInputCloud(cloud_filtered);
     segment_.segment(*inliers, *coefficients);
-    if (inliers->indices.size() < (size_t) thresh)  // TODO: make configurable? TODO make this based on "can we grasp object"
+    // TODO(enhancement): make configurable?
+    // TODO(enhancement): make this based on "can we grasp object"
+    if (inliers->indices.size() < (size_t) thresh)
     {
       RCLCPP_DEBUG(LOGGER, "No more planes to remove.");
       break;
@@ -119,7 +126,9 @@ bool ObjectSupportSegmentation::segment(
     extract.filter(plane);
 
     // Check plane is mostly horizontal
-    Eigen::Vector3f normal(coefficients->values[0], coefficients->values[1], coefficients->values[2]);
+    Eigen::Vector3f normal(coefficients->values[0],
+                           coefficients->values[1],
+                           coefficients->values[2]);
     float angle = acos(Eigen::Vector3f::UnitZ().dot(normal));
     if (angle < 0.15)
     {
@@ -215,7 +224,8 @@ bool ObjectSupportSegmentation::segment(
     // new object, with cluster and bounding box
     grasping_msgs::msg::Object object;
     // set name of supporting surface
-    object.support_surface = std::string("surface") + boost::lexical_cast<std::string>(support_plane_index);
+    object.support_surface = std::string("surface") +
+                             boost::lexical_cast<std::string>(support_plane_index);
     // add shape, pose and transformed cluster
     shape_msgs::msg::SolidPrimitive box;
     geometry_msgs::msg::Pose pose;

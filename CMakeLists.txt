@@ -74,6 +74,9 @@ if (BUILD_TESTING)
   )
   ament_target_dependencies(simple_grasping_test_shape_extraction ${common_depends})
   target_link_libraries(simple_grasping_test_shape_extraction simple_grasping ${PCL_LIBRARIES})
+
+  find_package(ament_cmake_cpplint)
+  ament_cpplint(FILTERS "-whitespace/braces" "-whitespace/newline")
 endif()
 
 ### Install

@@ -28,20 +28,20 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_OBJECT_SUPPORT_SEGMENTATION_H
-#define SIMPLE_GRASPING_OBJECT_SUPPORT_SEGMENTATION_H
+#ifndef SIMPLE_GRASPING__OBJECT_SUPPORT_SEGMENTATION_H_
+#define SIMPLE_GRASPING__OBJECT_SUPPORT_SEGMENTATION_H_
 
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include <grasping_msgs/msg/object.hpp>
+#include "grasping_msgs/msg/object.hpp"
 
-#include <pcl/io/io.h>
-#include <pcl/point_types.h>
-#include <pcl/segmentation/extract_clusters.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/filters/voxel_grid.h>
+#include "pcl/io/io.h"
+#include "pcl/point_types.h"
+#include "pcl/segmentation/extract_clusters.h"
+#include "pcl/filters/extract_indices.h"
+#include "pcl/segmentation/sac_segmentation.h"
+#include "pcl/filters/voxel_grid.h"
 
 namespace simple_grasping
 {
@@ -52,12 +52,11 @@ namespace simple_grasping
 class ObjectSupportSegmentation
 {
 public:
-
   /**
    *  @brief Constructor, loads pipeline using ROS parameters.
    *  @param node Node instance to use for accessing parameters.
    */
-  ObjectSupportSegmentation(rclcpp::Node::SharedPtr node);
+  explicit ObjectSupportSegmentation(rclcpp::Node::SharedPtr node);
 
   /**
    *  @brief Split a cloud into objects and supporting surfaces.
@@ -74,7 +73,7 @@ public:
                pcl::PointCloud<pcl::PointXYZRGB>& object_cloud,
                pcl::PointCloud<pcl::PointXYZRGB>& support_cloud,
                bool output_clouds);
-  
+
 private:
   pcl::VoxelGrid<pcl::PointXYZRGB> voxel_grid_;
   pcl::SACSegmentation<pcl::PointXYZRGB> segment_;
@@ -86,4 +85,4 @@ private:
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_OBJECT_SUPPORT_SEGMENTATION_H
+#endif  // SIMPLE_GRASPING__OBJECT_SUPPORT_SEGMENTATION_H_

@@ -31,11 +31,14 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
-#define SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
+#ifndef SIMPLE_GRASPING__SHAPE_GRASP_PLANNER_H_
+#define SIMPLE_GRASPING__SHAPE_GRASP_PLANNER_H_
 
-#include <rclcpp/rclcpp.hpp>
-#include <grasping_msgs/msg/graspable_object.hpp>
+#include <string>
+#include <vector>
+
+#include "rclcpp/rclcpp.hpp"
+#include "grasping_msgs/msg/graspable_object.hpp"
 
 namespace simple_grasping
 {
@@ -51,7 +54,7 @@ public:
    * @brief Constructor, loads grasp planner configuration from ROS params.
    * @param node Node instance to use for accessing grasp planner parameters.
    */
-  ShapeGraspPlanner(rclcpp::Node::SharedPtr node);
+  explicit ShapeGraspPlanner(rclcpp::Node::SharedPtr node);
 
   virtual int plan(const grasping_msgs::msg::Object& object,
                    std::vector<moveit_msgs::msg::Grasp>& grasps);
@@ -115,4 +118,4 @@ private:
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
+#endif  // SIMPLE_GRASPING__SHAPE_GRASP_PLANNER_H_

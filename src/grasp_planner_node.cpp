@@ -30,6 +30,8 @@
 
 // Author: Michael Ferguson
 
+#include <memory>
+
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "simple_grasping/shape_grasp_planner.h"
@@ -47,7 +49,7 @@ class GraspPlannerNode : public rclcpp::Node
   using GraspPlanningGoal = rclcpp_action::ServerGoalHandle<GraspPlanningAction>;
 
 public:
-  GraspPlannerNode(const rclcpp::NodeOptions& options)
+  explicit GraspPlannerNode(const rclcpp::NodeOptions& options)
   : rclcpp::Node("grasp_planner", options)
   {
     // Action for grasp planning

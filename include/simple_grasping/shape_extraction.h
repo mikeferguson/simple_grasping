@@ -30,15 +30,15 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_SHAPE_EXTRACTION_H
-#define SIMPLE_GRASPING_SHAPE_EXTRACTION_H
+#ifndef SIMPLE_GRASPING__SHAPE_EXTRACTION_H_
+#define SIMPLE_GRASPING__SHAPE_EXTRACTION_H_
 
-#include <shape_msgs/msg/solid_primitive.hpp>
-#include <geometry_msgs/msg/pose.hpp>
+#include "shape_msgs/msg/solid_primitive.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 
-#include <pcl/point_types.h>
-#include <pcl/pcl_base.h>
-#include <pcl/ModelCoefficients.h>
+#include "pcl/point_types.h"
+#include "pcl/pcl_base.h"
+#include "pcl/ModelCoefficients.h"
 
 namespace simple_grasping
 {
@@ -86,4 +86,4 @@ bool extractUnorientedBoundingBox(const pcl::PointCloud<pcl::PointXYZRGB>& input
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_SHAPE_EXTRACTION_H
+#endif  // SIMPLE_GRASPING__SHAPE_EXTRACTION_H_

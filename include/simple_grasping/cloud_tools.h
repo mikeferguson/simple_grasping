@@ -31,8 +31,8 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_CLOUD_TOOLS_H
-#define SIMPLE_GRASPING_CLOUD_TOOLS_H
+#ifndef SIMPLE_GRASPING__CLOUD_TOOLS_H_
+#define SIMPLE_GRASPING__CLOUD_TOOLS_H_
 
 #include <Eigen/Eigen>
 
@@ -85,4 +85,4 @@ double distancePointToPlane(const Eigen::Vector4f& point, const pcl::ModelCoeffi
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_CLOUD_TOOLS_H
+#endif  // SIMPLE_GRASPING__CLOUD_TOOLS_H_
