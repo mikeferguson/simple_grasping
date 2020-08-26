@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2015, Fetch Robotics Inc.
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * All rights reserved.
@@ -30,11 +31,14 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
-#define SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
+#ifndef SIMPLE_GRASPING__SHAPE_GRASP_PLANNER_H_
+#define SIMPLE_GRASPING__SHAPE_GRASP_PLANNER_H_
 
-#include <ros/ros.h>
-#include <grasping_msgs/GraspableObject.h>
+#include <string>
+#include <vector>
+
+#include "rclcpp/rclcpp.hpp"
+#include "grasping_msgs/msg/graspable_object.hpp"
 
 namespace simple_grasping
 {
@@ -48,12 +52,12 @@ class ShapeGraspPlanner
 public:
   /**
    * @brief Constructor, loads grasp planner configuration from ROS params.
-   * @param nh Nodehandle to use for accessing grasp planner parameters.
+   * @param node Node instance to use for accessing grasp planner parameters.
    */
-  ShapeGraspPlanner(ros::NodeHandle& nh);
+  explicit ShapeGraspPlanner(rclcpp::Node::SharedPtr node);
 
-  virtual int plan(const grasping_msgs::Object& object,
-                   std::vector<moveit_msgs::Grasp>& grasps);
+  virtual int plan(const grasping_msgs::msg::Object& object,
+                   std::vector<moveit_msgs::msg::Grasp>& grasps);
 
 private:
   /**
@@ -65,7 +69,7 @@ private:
    *  @param quality The quality to ascribe to this grasp.
    *  @returns The number of grasps generated.
    */
-  int createGrasp(const geometry_msgs::PoseStamped& pose,
+  int createGrasp(const geometry_msgs::msg::PoseStamped& pose,
                   double gripper_opening,
                   double gripper_pitch,
                   double x_offset,
@@ -83,11 +87,11 @@ private:
    *         vertical poses.
    *  @returns The number of grasps generated.
    */
-  int createGraspSeries(const geometry_msgs::PoseStamped& pose,
+  int createGraspSeries(const geometry_msgs::msg::PoseStamped& pose,
                         double depth, double width, double height,
                         bool use_vertical = true);
 
-  trajectory_msgs::JointTrajectory makeGraspPosture(double pose);
+  trajectory_msgs::msg::JointTrajectory makeGraspPosture(double pose);
 
   // gripper model
   std::string left_joint_, right_joint_;
@@ -109,9 +113,9 @@ private:
   double retreat_desired_translation_;
 
   // storing of internal grasps as we generate them
-  std::vector<moveit_msgs::Grasp> grasps_;
+  std::vector<moveit_msgs::msg::Grasp> grasps_;
 };
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_SHAPE_GRASP_PLANNER_H
+#endif  // SIMPLE_GRASPING__SHAPE_GRASP_PLANNER_H_

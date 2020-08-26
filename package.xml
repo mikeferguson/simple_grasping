@@ -1,4 +1,4 @@
-<package>
+<package format="3">
 
   <name>simple_grasping</name>
   <version>0.3.1</version>
@@ -6,38 +6,29 @@
     Basic grasping applications and demos.
   </description>
   <author>Michael Ferguson</author>
-  <maintainer email="mferguson@fetchrobotics.com">Michael Ferguson</maintainer>
+  <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
   <license>BSD</license>
   <url>http://ros.org/wiki/simple_grasping</url>
   
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>actionlib</build_depend>
-  <build_depend>cmake_modules</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>grasping_msgs</build_depend>
-  <build_depend>message_generation</build_depend>
-  <build_depend>moveit_msgs</build_depend>
-  <build_depend>pcl_ros</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>shape_msgs</build_depend>
-  <build_depend>tf</build_depend>
+  <depend>geometry_msgs</depend>
+  <depend>grasping_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>moveit_msgs</depend>
+  <depend>pcl_ros</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>rclcpp_action</depend>
+  <depend>sensor_msgs</depend>
+  <depend>shape_msgs</depend>
+  <depend>tf2_ros</depend>
 
-  <!-- Needed to work around https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=894656 on Debian Stretch -->
-  <build_depend>libvtk-qt</build_depend>
-  <run_depend>libvtk-qt</run_depend>
-  
-  <run_depend>actionlib</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>grasping_msgs</run_depend>
-  <run_depend>moveit_python</run_depend>
-  <run_depend>message_runtime</run_depend>
-  <run_depend>moveit_msgs</run_depend>
-  <run_depend>pcl_ros</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>shape_msgs</run_depend>
-  <run_depend>tf</run_depend>
+  <test_depend>ament_cmake_cpplint</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 
 </package>

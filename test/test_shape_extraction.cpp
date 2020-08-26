@@ -30,7 +30,7 @@
 // Author: Michael Ferguson
 
 #include <gtest/gtest.h>
-#include <simple_grasping/shape_extraction.h>
+#include "simple_grasping/shape_extraction.h"
 
 TEST(test_shape_extraction, simple_cube)
 {
@@ -64,8 +64,8 @@ TEST(test_shape_extraction, simple_cube)
   plane->values[2] = 1.0;
   plane->values[3] = -0.05;
 
-  shape_msgs::SolidPrimitive shape;
-  geometry_msgs::Pose pose;
+  shape_msgs::msg::SolidPrimitive shape;
+  geometry_msgs::msg::Pose pose;
 
   bool ret = simple_grasping::extractShape(cloud, plane, output, shape, pose);
   EXPECT_TRUE(ret);

@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2015, Fetch Robotics Inc.
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * All rights reserved.
@@ -30,16 +31,20 @@
 
 // Author: Michael Ferguson
 
-#include <Eigen/Eigen>
-#include <ros/ros.h>
-#include <simple_grasping/shape_grasp_planner.h>
+#include "simple_grasping/shape_grasp_planner.h"
 
-using shape_msgs::SolidPrimitive;
+#include <Eigen/Eigen>
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+
+using shape_msgs::msg::SolidPrimitive;
 
 namespace simple_grasping
 {
 
-moveit_msgs::GripperTranslation makeGripperTranslation(
+moveit_msgs::msg::GripperTranslation makeGripperTranslation(
   std::string frame,
   double min,
   double desired,
@@ -47,7 +52,7 @@ moveit_msgs::GripperTranslation makeGripperTranslation(
   double y_axis = 0.0,
   double z_axis = 0.0)
 {
-  moveit_msgs::GripperTranslation translation;
+  moveit_msgs::msg::GripperTranslation translation;
   translation.direction.vector.x = x_axis;
   translation.direction.vector.y = y_axis;
   translation.direction.vector.z = z_axis;
@@ -69,50 +74,54 @@ Eigen::Quaterniond quaternionFromEuler(float yaw, float pitch, float roll)
   float x = sr*cp*cy - cr*sp*sy;
   float y = cr*sp*cy + sr*cp*sy;
   float z = cr*cp*sy - sr*sp*cy;
-  return Eigen::Quaterniond(w,x,y,z);
+  return Eigen::Quaterniond(w, x, y, z);
 }
 
-ShapeGraspPlanner::ShapeGraspPlanner(ros::NodeHandle& nh)
+ShapeGraspPlanner::ShapeGraspPlanner(rclcpp::Node::SharedPtr node)
 {
   /*
    * Gripper model is based on having two fingers, and assumes
    * that the robot is using the moveit_simple_controller_manager
    * gripper interface, with "parallel" parameter set to true.
    */
-  nh.param<std::string>("gripper/left_joint", left_joint_, "l_gripper_finger_joint");
-  nh.param<std::string>("gripper/right_joint", right_joint_, "r_gripper_finger_joint");
-  nh.param("gripper/max_opening", max_opening_, 0.110);
-  nh.param("gripper/max_effort", max_effort_, 50.0);
-  nh.param("gripper/finger_depth", finger_depth_, 0.02);
-  nh.param("gripper/grasp_duration", grasp_duration_, 2.0);
-  nh.param("gripper/gripper_tolerance", gripper_tolerance_, 0.02);
+  left_joint_ = node->declare_parameter<std::string>("gripper/left_joint",
+                                                     "l_gripper_finger_joint");
+  right_joint_ = node->declare_parameter<std::string>("gripper/right_joint",
+                                                      "r_gripper_finger_joint");
+  max_opening_ = node->declare_parameter<double>("gripper/max_opening", 0.110);
+  max_effort_ = node->declare_parameter<double>("gripper/max_effort", 50.0);
+  finger_depth_ = node->declare_parameter<double>("gripper/finger_depth", 0.02);
+  grasp_duration_ = node->declare_parameter<double>("gripper/grasp_duration", 2.0);
+  gripper_tolerance_ = node->declare_parameter<double>("gripper/gripper_tolerance", 0.02);
 
   /*
    * Approach is usually aligned with wrist_roll
    */
-  nh.param<std::string>("gripper/approach/frame", approach_frame_, "wrist_roll_link");
-  nh.param("gripper/approach/min", approach_min_translation_, 0.1);
-  nh.param("gripper/approach/desired", approach_desired_translation_, 0.15);
+  approach_frame_ = node->declare_parameter<std::string>("gripper/approach/frame",
+                                                         "wrist_roll_link");
+  approach_min_translation_ = node->declare_parameter<double>("gripper/approach/min", 0.1);
+  approach_desired_translation_ = node->declare_parameter<double>("gripper/approach/desired",
+                                                                  0.15);
 
   /*
    * Retreat is usually aligned with wrist_roll
    */
-  nh.param<std::string>("gripper/retreat/frame", retreat_frame_, "wrist_roll_link");
-  nh.param("gripper/retreat/min", retreat_min_translation_, 0.1);
-  nh.param("gripper/retreat/desired", retreat_desired_translation_, 0.15);
+  retreat_frame_ = node->declare_parameter<std::string>("gripper/retreat/frame", "wrist_roll_link");
+  retreat_min_translation_ = node->declare_parameter<double>("gripper/retreat/min", 0.1);
+  retreat_desired_translation_ = node->declare_parameter<double>("gripper/retreat/desired", 0.15);
 
   // Distance from tool point to planning frame
-  nh.param("gripper/tool_to_planning_frame", tool_offset_, 0.165);
+  tool_offset_ = node->declare_parameter<double>("gripper/tool_to_planning_frame", 0.165);
 }
 
-int ShapeGraspPlanner::createGrasp(const geometry_msgs::PoseStamped& pose,
+int ShapeGraspPlanner::createGrasp(const geometry_msgs::msg::PoseStamped& pose,
                                    double gripper_opening,
                                    double gripper_pitch,
                                    double x_offset,
                                    double z_offset,
                                    double quality)
 {
-  moveit_msgs::Grasp grasp;
+  moveit_msgs::msg::Grasp grasp;
   grasp.grasp_pose = pose;
 
   // defaults
@@ -160,7 +169,7 @@ int ShapeGraspPlanner::createGrasp(const geometry_msgs::PoseStamped& pose,
 // starts with gripper level, rotates it up
 // this works for boxes and cylinders
 int ShapeGraspPlanner::createGraspSeries(
-  const geometry_msgs::PoseStamped& pose,
+  const geometry_msgs::msg::PoseStamped& pose,
   double depth, double width, double height,
   bool use_vertical)
 {
@@ -185,7 +194,7 @@ int ShapeGraspPlanner::createGraspSeries(
   {
     if (use_vertical)
       count += createGrasp(pose, open, 1.57, step, -z, 1.0 - 0.1*step);  // vertical
-    count += createGrasp(pose, open, 1.07, step, -z + 0.01, 0.7 - 0.1*step);  // slightly angled down
+    count += createGrasp(pose, open, 1.07, step, -z + 0.01, 0.7 - 0.1*step);  // angled down
     if (step > 0.05)
     {
       if (use_vertical)
@@ -198,7 +207,7 @@ int ShapeGraspPlanner::createGraspSeries(
   for (double step = 0.0; step < height/2.0; step += 0.1)
   {
     count += createGrasp(pose, open, 0.0, x, step, 0.8 - 0.1*step);  // horizontal
-    count += createGrasp(pose, open, 0.5, x-0.01, step, 0.6 - 0.1*step);  // slightly angled up
+    count += createGrasp(pose, open, 0.5, x-0.01, step, 0.6 - 0.1*step);  // angled up
     if (step > 0.05)
     {
       count += createGrasp(pose, open, 0.0, x, -step, 0.8 - 0.1*step);
@@ -212,10 +221,10 @@ int ShapeGraspPlanner::createGraspSeries(
   return count;
 }
 
-int ShapeGraspPlanner::plan(const grasping_msgs::Object& object,
-                            std::vector<moveit_msgs::Grasp>& grasps)
+int ShapeGraspPlanner::plan(const grasping_msgs::msg::Object& object,
+                            std::vector<moveit_msgs::msg::Grasp>& grasps)
 {
-  ROS_INFO("shape grasp planning starting...");
+  // ROS_INFO("shape grasp planning starting...");
 
   // Need a shape primitive
   if (object.primitives.size() == 0)
@@ -235,7 +244,7 @@ int ShapeGraspPlanner::plan(const grasping_msgs::Object& object,
   grasps_.clear();
 
   // Setup Pose
-  geometry_msgs::PoseStamped grasp_pose;
+  geometry_msgs::msg::PoseStamped grasp_pose;
   grasp_pose.header = object.header;
   grasp_pose.pose = object.primitive_poses[0];
 
@@ -282,24 +291,24 @@ int ShapeGraspPlanner::plan(const grasping_msgs::Object& object,
     std::swap(x, y);
   }
 
-  ROS_INFO("shape grasp planning done.");
+  // ROS_INFO("shape grasp planning done.");
 
   grasps = grasps_;
   return grasps.size();  // num of grasps
 }
 
-trajectory_msgs::JointTrajectory
+trajectory_msgs::msg::JointTrajectory
 ShapeGraspPlanner::makeGraspPosture(double pose)
 {
-  trajectory_msgs::JointTrajectory trajectory;
+  trajectory_msgs::msg::JointTrajectory trajectory;
   trajectory.joint_names.push_back(left_joint_);
   trajectory.joint_names.push_back(right_joint_);
-  trajectory_msgs::JointTrajectoryPoint point;
+  trajectory_msgs::msg::JointTrajectoryPoint point;
   point.positions.push_back(pose/2.0);
   point.positions.push_back(pose/2.0);
   point.effort.push_back(max_effort_);
   point.effort.push_back(max_effort_);
-  point.time_from_start = ros::Duration(grasp_duration_);
+  point.time_from_start = rclcpp::Duration::from_seconds(grasp_duration_);
   trajectory.points.push_back(point);
   return trajectory;
 }

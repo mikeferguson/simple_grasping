@@ -1,6 +1,6 @@
 /*
+ * Copyright (c) 2013-2020 Michael E. Ferguson
  * Copyright (c) 2014, Unbounded Robotics Inc.
- * Copyright (c) 2013, Michael E. Ferguson
  * All Rights Reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,19 +28,20 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_OBJECT_SUPPORT_SEGMENTATION_H
-#define SIMPLE_GRASPING_OBJECT_SUPPORT_SEGMENTATION_H
+#ifndef SIMPLE_GRASPING__OBJECT_SUPPORT_SEGMENTATION_H_
+#define SIMPLE_GRASPING__OBJECT_SUPPORT_SEGMENTATION_H_
 
 #include <vector>
 
-#include <grasping_msgs/Object.h>
+#include "rclcpp/rclcpp.hpp"
+#include "grasping_msgs/msg/object.hpp"
 
-#include <pcl/io/io.h>
-#include <pcl/point_types.h>
-#include <pcl/segmentation/extract_clusters.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/filters/voxel_grid.h>
+#include "pcl/io/io.h"
+#include "pcl/point_types.h"
+#include "pcl/segmentation/extract_clusters.h"
+#include "pcl/filters/extract_indices.h"
+#include "pcl/segmentation/sac_segmentation.h"
+#include "pcl/filters/voxel_grid.h"
 
 namespace simple_grasping
 {
@@ -51,12 +52,11 @@ namespace simple_grasping
 class ObjectSupportSegmentation
 {
 public:
-
   /**
    *  @brief Constructor, loads pipeline using ROS parameters.
-   *  @param nh Node handle to use for accessing parameters.
+   *  @param node Node instance to use for accessing parameters.
    */
-  ObjectSupportSegmentation(ros::NodeHandle& nh);
+  explicit ObjectSupportSegmentation(rclcpp::Node::SharedPtr node);
 
   /**
    *  @brief Split a cloud into objects and supporting surfaces.
@@ -68,19 +68,21 @@ public:
    *  @param support_cloud A colored cloud of supports found (if output_clouds).
    */
   bool segment(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud,
-               std::vector<grasping_msgs::Object>& objects,
-               std::vector<grasping_msgs::Object>& supports,
+               std::vector<grasping_msgs::msg::Object>& objects,
+               std::vector<grasping_msgs::msg::Object>& supports,
                pcl::PointCloud<pcl::PointXYZRGB>& object_cloud,
                pcl::PointCloud<pcl::PointXYZRGB>& support_cloud,
                bool output_clouds);
-  
+
 private:
   pcl::VoxelGrid<pcl::PointXYZRGB> voxel_grid_;
   pcl::SACSegmentation<pcl::PointXYZRGB> segment_;
   pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> extract_clusters_;
   pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_;
+
+  rclcpp::Clock::SharedPtr clock_;
 };
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_OBJECT_SUPPORT_SEGMENTATION_H
+#endif  // SIMPLE_GRASPING__OBJECT_SUPPORT_SEGMENTATION_H_

@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2015, Fetch Robotics Inc.
  * All rights reserved.
  *
@@ -29,45 +30,74 @@
 
 // Author: Michael Ferguson
 
-#include <ros/ros.h>
-#include <actionlib/server/simple_action_server.h>
-#include <simple_grasping/shape_grasp_planner.h>
-#include <grasping_msgs/GraspPlanningAction.h>
+#include <memory>
 
-class GraspPlannerNode
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+#include "simple_grasping/shape_grasp_planner.h"
+#include "grasping_msgs/action/grasp_planning.hpp"
+
+namespace simple_grasping
 {
-  typedef actionlib::SimpleActionServer<grasping_msgs::GraspPlanningAction> server_t;
+
+using std::placeholders::_1;
+using std::placeholders::_2;
+
+class GraspPlannerNode : public rclcpp::Node
+{
+  using GraspPlanningAction = grasping_msgs::action::GraspPlanning;
+  using GraspPlanningGoal = rclcpp_action::ServerGoalHandle<GraspPlanningAction>;
 
 public:
-  GraspPlannerNode(ros::NodeHandle n)
+  explicit GraspPlannerNode(const rclcpp::NodeOptions& options)
+  : rclcpp::Node("grasp_planner", options)
   {
-    // Planner
-    planner_.reset(new simple_grasping::ShapeGraspPlanner(n));
-
     // Action for grasp planning
-    server_.reset(new server_t(n, "plan",
-                               boost::bind(&GraspPlannerNode::executeCallback, this, _1),
-                               false));
-    server_->start();
+    server_ = rclcpp_action::create_server<GraspPlanningAction>(
+      this->get_node_base_interface(),
+      this->get_node_clock_interface(),
+      this->get_node_logging_interface(),
+      this->get_node_waitables_interface(),
+      "plan",
+      std::bind(&GraspPlannerNode::handle_goal, this, _1, _2),
+      std::bind(&GraspPlannerNode::handle_cancel, this, _1),
+      std::bind(&GraspPlannerNode::handle_accepted, this, _1)
+    );
   }
 
 private:
-  void executeCallback(const grasping_msgs::GraspPlanningGoalConstPtr& goal)
+  rclcpp_action::GoalResponse
+  handle_goal(const rclcpp_action::GoalUUID & uuid,
+    std::shared_ptr<const GraspPlanningAction::Goal> goal_handle)
   {
-    grasping_msgs::GraspPlanningResult result;
-    planner_->plan(goal->object, result.grasps);
-    server_->setSucceeded(result);
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
-  boost::shared_ptr<simple_grasping::ShapeGraspPlanner> planner_;
-  boost::shared_ptr<server_t> server_;
+  rclcpp_action::CancelResponse
+  handle_cancel(const std::shared_ptr<GraspPlanningGoal> goal_handle)
+  {
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  void handle_accepted(const std::shared_ptr<GraspPlanningGoal> goal_handle)
+  {
+    auto result = std::make_shared<GraspPlanningAction::Result>();
+
+    if (!planner_)
+    {
+      planner_.reset(new simple_grasping::ShapeGraspPlanner(this->shared_from_this()));
+    }
+
+    const auto goal = goal_handle->get_goal();
+    planner_->plan(goal->object, result->grasps);
+    goal_handle->succeed(result);
+  }
+
+  std::shared_ptr<simple_grasping::ShapeGraspPlanner> planner_;
+  rclcpp_action::Server<GraspPlanningAction>::SharedPtr server_;
 };
 
-int main(int argc, char* argv[])
-{
-  ros::init(argc, argv, "grasp_planner");
-  ros::NodeHandle nh("~");
-  GraspPlannerNode planning(nh);
-  ros::spin();
-  return 0;
-}
+}  // namespace simple_grasping
+
+#include "rclcpp_components/register_node_macro.hpp"
+RCLCPP_COMPONENTS_REGISTER_NODE(simple_grasping::GraspPlannerNode)

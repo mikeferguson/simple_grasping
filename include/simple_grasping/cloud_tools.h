@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * Copyright 2011, Willow Garage, Inc. (hsv2rgb)
  * All rights reserved.
@@ -30,14 +31,14 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_CLOUD_TOOLS_H
-#define SIMPLE_GRASPING_CLOUD_TOOLS_H
+#ifndef SIMPLE_GRASPING__CLOUD_TOOLS_H_
+#define SIMPLE_GRASPING__CLOUD_TOOLS_H_
 
 #include <Eigen/Eigen>
 
+#include <pcl/pcl_base.h>
 #include <pcl/point_types.h>
-#include <pcl_ros/point_cloud.h>
-#include <pcl_ros/transforms.h>
+#include <pcl/ModelCoefficients.h>
 
 #include <vector>
 
@@ -84,4 +85,4 @@ double distancePointToPlane(const Eigen::Vector4f& point, const pcl::ModelCoeffi
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_CLOUD_TOOLS_H
+#endif  // SIMPLE_GRASPING__CLOUD_TOOLS_H_

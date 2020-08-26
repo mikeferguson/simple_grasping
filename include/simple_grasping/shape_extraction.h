@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2013-2014, Unbounded Robotics Inc.
  * All rights reserved.
  *
@@ -29,14 +30,15 @@
 
 // Author: Michael Ferguson
 
-#ifndef SIMPLE_GRASPING_SHAPE_EXTRACTION_H
-#define SIMPLE_GRASPING_SHAPE_EXTRACTION_H
+#ifndef SIMPLE_GRASPING__SHAPE_EXTRACTION_H_
+#define SIMPLE_GRASPING__SHAPE_EXTRACTION_H_
 
-#include <shape_msgs/SolidPrimitive.h>
-#include <geometry_msgs/Pose.h>
+#include "shape_msgs/msg/solid_primitive.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 
-#include <pcl/point_types.h>
-#include <pcl_ros/point_cloud.h>
+#include "pcl/point_types.h"
+#include "pcl/pcl_base.h"
+#include "pcl/ModelCoefficients.h"
 
 namespace simple_grasping
 {
@@ -51,8 +53,8 @@ namespace simple_grasping
  */
 bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
                   pcl::PointCloud<pcl::PointXYZRGB>& output,
-                  shape_msgs::SolidPrimitive& shape,
-                  geometry_msgs::Pose& pose);
+                  shape_msgs::msg::SolidPrimitive& shape,
+                  geometry_msgs::msg::Pose& pose);
 
 /**
  *  \brief Find the smallest shape primitive we can fit around this object, given
@@ -67,8 +69,8 @@ bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
 bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
                   const pcl::ModelCoefficients::Ptr model,
                   pcl::PointCloud<pcl::PointXYZRGB>& output,
-                  shape_msgs::SolidPrimitive& shape,
-                  geometry_msgs::Pose& pose);
+                  shape_msgs::msg::SolidPrimitive& shape,
+                  geometry_msgs::msg::Pose& pose);
 
 /**
  *  \brief Find a bounding box around a cloud. This method does not attempt to
@@ -79,9 +81,9 @@ bool extractShape(const pcl::PointCloud<pcl::PointXYZRGB>& input,
  *  \param pose The pose of the shape primitive extracted.
  */
 bool extractUnorientedBoundingBox(const pcl::PointCloud<pcl::PointXYZRGB>& input,
-                                  shape_msgs::SolidPrimitive& shape,
-                                  geometry_msgs::Pose& pose);
+                                  shape_msgs::msg::SolidPrimitive& shape,
+                                  geometry_msgs::msg::Pose& pose);
 
 }  // namespace simple_grasping
 
-#endif  // SIMPLE_GRASPING_SHAPE_EXTRACTION_H
+#endif  // SIMPLE_GRASPING__SHAPE_EXTRACTION_H_

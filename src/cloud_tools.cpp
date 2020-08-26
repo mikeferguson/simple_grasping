@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020, Michael Ferguson
  * Copyright 2013-2014, Unbounded Robotics Inc. 
  * Copyright 2011, Willow Garage, Inc. (hsv2rgb)
  * All rights reserved.
@@ -30,14 +31,18 @@
 
 // Author: Michael Ferguson
 
-#include <simple_grasping/cloud_tools.h>
+#include "simple_grasping/cloud_tools.h"
+
+#include <vector>
+
+#include "pcl/common/io.h"
 
 namespace simple_grasping
 {
 
 // http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
 // for points on a dark background you want somewhat lightened
-// colors generally... back off the saturation (s)      
+// colors generally... back off the saturation (s)
 void hsv2rgb(const float h, const float s, const float v, float& r, float& g, float& b)
 {
   float c = v * s;
