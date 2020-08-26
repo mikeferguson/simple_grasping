@@ -60,6 +60,7 @@ target_link_libraries(simple_grasping
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
+add_dependencies(simple_grasping grasping_msgs_generate_messages_cpp)
 
 ### Build basic_grasping_perception
 add_executable(basic_grasping_perception src/basic_grasping_perception.cpp)
