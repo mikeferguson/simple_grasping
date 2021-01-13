@@ -2,8 +2,8 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2021-01-13)
+------------------
 * add depend on grasping_msgs, fix `#5 <https://github.com/mikeferguson/simple_grasping/issues/5>`_
 * Contributors: Michael Ferguson
 
