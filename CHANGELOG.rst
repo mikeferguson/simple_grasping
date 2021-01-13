@@ -2,6 +2,11 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add depend on grasping_msgs, fix `#5 <https://github.com/mikeferguson/simple_grasping/issues/5>`_
+* Contributors: Michael Ferguson
+
 0.3.1 (2018-08-14)
 ------------------
 * insert proper key name
