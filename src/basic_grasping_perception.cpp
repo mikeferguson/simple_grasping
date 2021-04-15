@@ -62,7 +62,6 @@ public:
     nh_.param<bool>("continuous_detection", continuous_detection_, false);
 
     // frame_id: frame to transform cloud to (should be XY horizontal)
-    world_frame_ = "base_link";
     nh_.getParam("frame_id", world_frame_);
 
     // Create planner
@@ -115,11 +114,19 @@ private:
     ROS_DEBUG("Filtered for range, now %d points.", static_cast<int>(cloud_filtered->points.size()));
 
     // Transform to grounded
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed(new pcl::PointCloud<pcl::PointXYZRGB>);
-    if (!pcl_ros::transformPointCloud(world_frame_, *cloud_filtered, *cloud_transformed, listener_))
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed;
+    if (world_frame_.empty())
     {
-      ROS_ERROR("Error transforming to frame %s", world_frame_.c_str());
-      return;
+      cloud_transformed = cloud_filtered;
+    }
+    else
+    {
+      cloud_transformed = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
+      if (!pcl_ros::transformPointCloud(world_frame_, *cloud_filtered, *cloud_transformed, listener_))
+      {
+        ROS_ERROR("Error transforming to frame %s", world_frame_.c_str());
+        return;
+      }
     }
 
     // Run segmentation
