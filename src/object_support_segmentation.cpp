@@ -86,8 +86,8 @@ bool ObjectSupportSegmentation::segment(
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
   voxel_grid_.setInputCloud(cloud);
   voxel_grid_.filter(*cloud_filtered);
-  ROS_DEBUG("object_support_segmentation",
-            "Filtered for transformed Z, now %d points.", static_cast<int>(cloud_filtered->points.size()));
+  ROS_DEBUG_NAMED("object_support_segmentation",
+                  "Filtered for transformed Z, now %d points.", static_cast<int>(cloud_filtered->points.size()));
 
   // remove support planes
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr non_horizontal_planes(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -103,7 +103,7 @@ bool ObjectSupportSegmentation::segment(
     segment_.segment(*inliers, *coefficients);
     if (inliers->indices.size() < (size_t) thresh)  // TODO: make configurable? TODO make this based on "can we grasp object"
     {
-      ROS_DEBUG("object_support_segmentation", "No more planes to remove.");
+      ROS_DEBUG_NAMED("object_support_segmentation", "No more planes to remove.");
       break;
     }
 
@@ -120,8 +120,8 @@ bool ObjectSupportSegmentation::segment(
     float angle = acos(Eigen::Vector3f::UnitZ().dot(normal));
     if (angle < 0.15)
     {
-      ROS_DEBUG("object_support_segmentation",
-                "Removing a plane with %d points.", static_cast<int>(inliers->indices.size()));
+      ROS_DEBUG_NAMED("object_support_segmentation",
+                      "Removing a plane with %d points.", static_cast<int>(inliers->indices.size()));
 
       // new support object, with cluster, bounding box, and plane
       grasping_msgs::Object object;
@@ -145,8 +145,8 @@ bool ObjectSupportSegmentation::segment(
 
       if (output_clouds)
       {
-        ROS_DEBUG("object_support_segmentation",
-                  "Adding support cluster of size %d.", static_cast<int>(plane.points.size()));
+        ROS_DEBUG_NAMED("object_support_segmentation",
+                        "Adding support cluster of size %d.", static_cast<int>(plane.points.size()));
         float hue = (360.0 / 8) * supports.size();
         colorizeCloud(plane, hue);
         support_cloud += plane;
@@ -158,8 +158,7 @@ bool ObjectSupportSegmentation::segment(
     else
     {
       // Add plane to temporary point cloud so we can recover points for object extraction below
-      ROS_DEBUG("object_support_segmentation",
-                "Plane is not horizontal");
+      ROS_DEBUG_NAMED("object_support_segmentation", "Plane is not horizontal");
       *non_horizontal_planes += plane;
     }
 
@@ -167,8 +166,8 @@ bool ObjectSupportSegmentation::segment(
     extract.setNegative(true);
     extract.filter(*cloud_filtered);
   }
-  ROS_DEBUG("object_support_segmentation",
-            "Cloud now %d points.", static_cast<int>(cloud_filtered->points.size()));
+  ROS_DEBUG_NAMED("object_support_segmentation",
+                  "Cloud now %d points.", static_cast<int>(cloud_filtered->points.size()));
 
   // Add the non-horizontal planes back in
   *cloud_filtered += *non_horizontal_planes;
@@ -177,8 +176,8 @@ bool ObjectSupportSegmentation::segment(
   std::vector<pcl::PointIndices> clusters;
   extract_clusters_.setInputCloud(cloud_filtered);
   extract_clusters_.extract(clusters);
-  ROS_DEBUG("object_support_segmentation",
-            "Extracted %d clusters.", static_cast<int>(clusters.size()));
+  ROS_DEBUG_NAMED("object_support_segmentation",
+                  "Extracted %d clusters.", static_cast<int>(clusters.size()));
 
   extract_indices_.setInputCloud(cloud_filtered);
   for (size_t i= 0; i < clusters.size(); i++)
@@ -207,8 +206,8 @@ bool ObjectSupportSegmentation::segment(
 
     if (support_plane_index == -1)
     {
-      ROS_DEBUG("object_support_segmentation",
-                "No support plane found for object");
+      ROS_DEBUG_NAMED("object_support_segmentation",
+                      "No support plane found for object");
       continue;
     }
 
@@ -232,8 +231,8 @@ bool ObjectSupportSegmentation::segment(
 
     if (output_clouds)
     {
-      ROS_DEBUG("object_support_segmentation",
-                "Adding an object cluster of size %d.", static_cast<int>(new_cloud.points.size()));
+      ROS_DEBUG_NAMED("object_support_segmentation",
+                      "Adding an object cluster of size %d.", static_cast<int>(new_cloud.points.size()));
       float hue = (360.0 / clusters.size()) * i;
       colorizeCloud(new_cloud, hue);
       object_cloud += new_cloud;
