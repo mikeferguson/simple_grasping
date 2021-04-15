@@ -154,8 +154,8 @@ private:
       if (ros::Time::now() - t > ros::Duration(3.0))
       {
         find_objects_ = false;
-        server_->setAborted(result, "Failed to get camera data in alloted time.");
-        ROS_ERROR("Failed to get camera data in alloted time.");
+        server_->setAborted(result, "Failed to get camera data in allocated time.");
+        ROS_ERROR("Failed to get camera data in allocated time.");
         return;
       }
     }
