@@ -103,7 +103,7 @@ private:
     if (!find_objects_)
       return;
 
-    ROS_DEBUG("Cloud recieved with %d points.", static_cast<int>(cloud->points.size()));
+    ROS_DEBUG("Cloud received with %d points.", static_cast<int>(cloud->points.size()));
 
     // Filter out noisy long-range points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
