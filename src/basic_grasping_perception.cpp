@@ -58,8 +58,10 @@ public:
     // use_debug: enable/disable output of a cloud containing object points
     nh_.getParam("use_debug", debug_);
 
+    // optionally enable object detection from the beginning without need to call the action
+    nh_.param<bool>("continuous_detection", continuous_detection_, false);
+
     // frame_id: frame to transform cloud to (should be XY horizontal)
-    world_frame_ = "base_link";
     nh_.getParam("frame_id", world_frame_);
 
     // Create planner
@@ -100,10 +102,10 @@ private:
   void cloudCallback(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr& cloud)
   {
     // be lazy
-    if (!find_objects_)
+    if (!find_objects_ && !continuous_detection_)
       return;
 
-    ROS_DEBUG("Cloud recieved with %d points.", static_cast<int>(cloud->points.size()));
+    ROS_DEBUG("Cloud received with %d points.", static_cast<int>(cloud->points.size()));
 
     // Filter out noisy long-range points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -112,11 +114,19 @@ private:
     ROS_DEBUG("Filtered for range, now %d points.", static_cast<int>(cloud_filtered->points.size()));
 
     // Transform to grounded
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed(new pcl::PointCloud<pcl::PointXYZRGB>);
-    if (!pcl_ros::transformPointCloud(world_frame_, *cloud_filtered, *cloud_transformed, listener_))
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_transformed;
+    if (world_frame_.empty())
     {
-      ROS_ERROR("Error transforming to frame %s", world_frame_.c_str());
-      return;
+      cloud_transformed = cloud_filtered;
+    }
+    else
+    {
+      cloud_transformed = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
+      if (!pcl_ros::transformPointCloud(world_frame_, *cloud_filtered, *cloud_transformed, listener_))
+      {
+        ROS_ERROR("Error transforming to frame %s", world_frame_.c_str());
+        return;
+      }
     }
 
     // Run segmentation
@@ -154,8 +164,8 @@ private:
       if (ros::Time::now() - t > ros::Duration(3.0))
       {
         find_objects_ = false;
-        server_->setAborted(result, "Failed to get camera data in alloted time.");
-        ROS_ERROR("Failed to get camera data in alloted time.");
+        server_->setAborted(result, "Failed to get camera data in allocated time.");
+        ROS_ERROR("Failed to get camera data in allocated time.");
         return;
       }
     }
@@ -186,6 +196,7 @@ private:
   std::string world_frame_;
 
   bool find_objects_;
+  bool continuous_detection_;
   std::vector<grasping_msgs::Object> objects_;
   std::vector<grasping_msgs::Object> supports_;
 
