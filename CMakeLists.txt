@@ -29,6 +29,7 @@ set(common_depends
   pcl_ros
   rclcpp
   rclcpp_action
+  rclcpp_components
   sensor_msgs
   shape_msgs
   tf2_ros
@@ -110,6 +111,7 @@ ament_export_dependencies(
   pcl_ros
   rclcpp
   rclcpp_action
+  rclcpp_components
   sensor_msgs
   shape_msgs
   tf2_ros

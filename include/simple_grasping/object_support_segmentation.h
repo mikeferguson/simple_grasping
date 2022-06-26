@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2020 Michael E. Ferguson
+ * Copyright (c) 2013-2022 Michael E. Ferguson
  * Copyright (c) 2014, Unbounded Robotics Inc.
  * All Rights Reserved
  *
@@ -36,7 +36,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "grasping_msgs/msg/object.hpp"
 
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 #include "pcl/point_types.h"
 #include "pcl/segmentation/extract_clusters.h"
 #include "pcl/filters/extract_indices.h"
