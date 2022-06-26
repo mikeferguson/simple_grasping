@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020, Michael E. Ferguson
+ * Copyright 2013-2022, Michael E. Ferguson
  * Copyright 2015, Fetch Robotics Inc.
  * Copyright 2014, Unbounded Robotics Inc.
  * All Rights Reserved
@@ -98,7 +98,7 @@ bool ObjectSupportSegmentation::segment(
 
   // remove support planes
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr non_horizontal_planes;
-  non_horizontal_planes = boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
+  non_horizontal_planes = std::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
   std::vector<pcl::ModelCoefficients::Ptr> plane_coefficients;  // coefs of all planes found
   int thresh = cloud_filtered->points.size()/8;
   while (cloud_filtered->points.size() > 500)

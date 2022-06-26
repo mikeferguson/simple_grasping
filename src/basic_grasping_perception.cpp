@@ -130,7 +130,7 @@ private:
 
     // Convert to point cloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud =
-      boost::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
+      std::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
     pcl::fromROSMsg(*msg, *cloud);
 
     RCLCPP_DEBUG(LOGGER, "Cloud recieved with %d points.", static_cast<int>(cloud->points.size()));
