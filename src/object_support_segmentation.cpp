@@ -111,7 +111,7 @@ bool ObjectSupportSegmentation::segment(
     segment_.segment(*inliers, *coefficients);
     // TODO(enhancement): make configurable?
     // TODO(enhancement): make this based on "can we grasp object"
-    if (inliers->indices.size() < (size_t) thresh)
+    if (inliers->indices.size() < static_cast<size_t>(thresh))
     {
       RCLCPP_DEBUG(LOGGER, "No more planes to remove.");
       break;
