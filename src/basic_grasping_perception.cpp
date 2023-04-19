@@ -75,6 +75,7 @@ public:
 
     // use_debug: enable/disable output of a cloud containing object points
     debug_ = this->declare_parameter<bool>("debug_topics", false);
+    topic_path_depth_ = this->declare_parameter("topic_path_depth", "/head_camera/depth_registered/points");
 
     // frame_id: frame to transform cloud to (should be XY horizontal)
     world_frame_ = this->declare_parameter<std::string>("frame_id", "base_link");
@@ -102,7 +103,7 @@ public:
     rclcpp::QoS points_qos(10);
     points_qos.best_effort();
     cloud_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-      "/head_camera/depth_registered/points",
+      topic_path_depth_ ,
       points_qos,
       std::bind(&BasicGraspingPerception::cloud_callback, this, _1));
 
@@ -249,6 +250,8 @@ private:
   }
 
   bool debug_;
+  // Topic name of the pointcloud to be subscribed.
+  std::string topic_path_depth_;
 
   std::shared_ptr<tf2_ros::Buffer> buffer_;
   std::shared_ptr<tf2_ros::TransformListener> listener_;
