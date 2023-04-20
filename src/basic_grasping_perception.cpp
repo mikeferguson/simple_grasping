@@ -133,7 +133,7 @@ private:
       std::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
     pcl::fromROSMsg(*msg, *cloud);
 
-    RCLCPP_DEBUG(LOGGER, "Cloud recieved with %d points.", static_cast<int>(cloud->points.size()));
+    RCLCPP_DEBUG(LOGGER, "Cloud received with %d points.", static_cast<int>(cloud->points.size()));
 
     // Filter out noisy long-range points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -223,7 +223,7 @@ private:
       {
         find_objects_ = false;
         goal_handle->abort(result);
-        RCLCPP_ERROR(LOGGER, "Failed to get camera data in alloted time.");
+        RCLCPP_ERROR(LOGGER, "Failed to get camera data in allocated time.");
         return;
       }
     }
