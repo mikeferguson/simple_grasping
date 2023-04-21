@@ -32,8 +32,8 @@
 #include "simple_grasping/object_support_segmentation.h"
 
 #include <Eigen/Eigen>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "boost/lexical_cast.hpp"
 
@@ -88,6 +88,15 @@ bool ObjectSupportSegmentation::segment(
   bool output_clouds)
 {
   RCLCPP_INFO(LOGGER, "object support segmentation starting...");
+
+  if (cloud->empty()) {
+    RCLCPP_ERROR(LOGGER, "Input pointcloud is empty.");
+    return false;
+  }
+  if (cloud->is_dense) {
+    RCLCPP_ERROR(LOGGER, "Input pointcloud is dense. Care removing NaN.");
+    return false;
+  }
 
   // process the cloud with a voxel grid
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
