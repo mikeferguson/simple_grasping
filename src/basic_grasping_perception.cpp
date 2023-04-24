@@ -68,13 +68,15 @@ public:
   explicit BasicGraspingPerception(const rclcpp::NodeOptions& options)
   : rclcpp::Node("basic_grasping_perception", options),
     debug_(false),
-    find_objects_(false)
+    need_to_find_objects_(false)
   {
     // Store clock
     clock_ = this->get_clock();
 
     // use_debug: enable/disable output of a cloud containing object points
     debug_ = this->declare_parameter<bool>("debug_topics", false);
+    topic_path_depth_ = this->declare_parameter("topic_path_depth", "/head_camera/depth_registered/points");
+    sec_wait_find_objects_ = this->declare_parameter("sec_wait_find_objects", 3.0);
 
     // frame_id: frame to transform cloud to (should be XY horizontal)
     world_frame_ = this->declare_parameter<std::string>("frame_id", "base_link");
@@ -102,7 +104,7 @@ public:
     rclcpp::QoS points_qos(10);
     points_qos.best_effort();
     cloud_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-      "/head_camera/depth_registered/points",
+      topic_path_depth_ ,
       points_qos,
       std::bind(&BasicGraspingPerception::cloud_callback, this, _1));
 
@@ -125,7 +127,7 @@ private:
   void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
   {
     // Be lazy
-    if (!find_objects_)
+    if (!need_to_find_objects_)
       return;
 
     // Convert to point cloud
@@ -133,7 +135,7 @@ private:
       std::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
     pcl::fromROSMsg(*msg, *cloud);
 
-    RCLCPP_DEBUG(LOGGER, "Cloud recieved with %d points.", static_cast<int>(cloud->points.size()));
+    RCLCPP_DEBUG(LOGGER, "Cloud received with %d points.", static_cast<int>(cloud->points.size()));
 
     // Filter out noisy long-range points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -179,7 +181,7 @@ private:
     }
 
     // Ok to continue processing
-    find_objects_ = false;
+    need_to_find_objects_ = false;
   }
 
   rclcpp_action::GoalResponse
@@ -214,16 +216,17 @@ private:
     auto result = std::make_shared<FindGraspableObjectsAction::Result>();
 
     // Get objects
-    find_objects_ = true;
+    need_to_find_objects_ = true;
     rclcpp::Time t = clock_->now();
-    while (find_objects_ == true)
+    while (need_to_find_objects_ == true)
+      // Keep looping to wait until another thread finds graspable objects.
     {
       std::this_thread::sleep_for(std::chrono::milliseconds(20));
-      if (clock_->now() - t > rclcpp::Duration::from_seconds(3.0))
+      if (clock_->now() - t > rclcpp::Duration::from_seconds(sec_wait_find_objects_))
       {
-        find_objects_ = false;
+        need_to_find_objects_ = false;
         goal_handle->abort(result);
-        RCLCPP_ERROR(LOGGER, "Failed to get camera data in alloted time.");
+        RCLCPP_ERROR(LOGGER, "Failed to get camera data in allocated time.");
         return;
       }
     }
@@ -249,12 +252,16 @@ private:
   }
 
   bool debug_;
+  // Topic name of the pointcloud to be subscribed.
+  std::string topic_path_depth_;
+  float sec_wait_find_objects_;
 
   std::shared_ptr<tf2_ros::Buffer> buffer_;
   std::shared_ptr<tf2_ros::TransformListener> listener_;
   std::string world_frame_;
 
-  bool find_objects_;
+  // When true, pointcloud topic will be examined to find graspable object9s).
+  bool need_to_find_objects_;
   std::vector<grasping_msgs::msg::Object> objects_;
   std::vector<grasping_msgs::msg::Object> supports_;
 
