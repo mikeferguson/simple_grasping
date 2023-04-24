@@ -2,6 +2,13 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* remove VTK dependency (`#11 <https://github.com/mikeferguson/simple_grasping/issues/11>`_)
+  Debian stretch really isn't a target anymore, and apparently now we have other issues by specifying this dependency
+* add LICENSE file
+* Contributors: Michael Ferguson
+
 0.4.0 (2021-01-13)
 ------------------
 * add depend on grasping_msgs, fix `#5 <https://github.com/mikeferguson/simple_grasping/issues/5>`_
