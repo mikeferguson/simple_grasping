@@ -84,10 +84,13 @@ public:
     {
       rclcpp::QoS qos(1);
       qos.best_effort();
+      // Allow overriding QoS
+      rclcpp::PublisherOptions pub_opts;
+      pub_opts.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
       object_cloud_pub_ =
-        this->create_publisher<sensor_msgs::msg::PointCloud2>("object_cloud", qos);
+        this->create_publisher<sensor_msgs::msg::PointCloud2>("object_cloud", qos, pub_opts);
       support_cloud_pub_ =
-        this->create_publisher<sensor_msgs::msg::PointCloud2>("support_cloud", qos);
+        this->create_publisher<sensor_msgs::msg::PointCloud2>("support_cloud", qos, pub_opts);
     }
 
     // Range filter for cloud
@@ -101,10 +104,14 @@ public:
     // Subscribe to head camera cloud
     rclcpp::QoS points_qos(10);
     points_qos.best_effort();
+    // Allow overriding QoS
+    rclcpp::SubscriptionOptions sub_opts;
+    sub_opts.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
     cloud_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       "/head_camera/depth_registered/points",
       points_qos,
-      std::bind(&BasicGraspingPerception::cloud_callback, this, _1));
+      std::bind(&BasicGraspingPerception::cloud_callback, this, _1),
+      sub_opts);
 
     // Setup actionlib server
     server_ = rclcpp_action::create_server<FindGraspableObjectsAction>(
