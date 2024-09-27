@@ -13,6 +13,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <build_depend>eigen</build_depend>
+  <build_depend>libpcl-all-dev</build_depend>
 
   <depend>geometry_msgs</depend>
   <depend>grasping_msgs</depend>

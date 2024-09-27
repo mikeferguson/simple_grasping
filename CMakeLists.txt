@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(simple_grasping)
 
-#find_package(Boost REQUIRED)
 find_package(PCL REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(ament_cmake REQUIRED)
