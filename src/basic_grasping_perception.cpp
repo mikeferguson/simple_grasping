@@ -76,6 +76,9 @@ public:
     // use_debug: enable/disable output of a cloud containing object points
     debug_ = this->declare_parameter<bool>("debug_topics", false);
 
+    // optionally enable object detection from the beginning without need to call the action
+    continuous_detection_ = this->declare_parameter<bool>("continuous_detection", false);
+
     // frame_id: frame to transform cloud to (should be XY horizontal)
     world_frame_ = this->declare_parameter<std::string>("frame_id", "base_link");
 
@@ -132,7 +135,7 @@ private:
   void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
   {
     // Be lazy
-    if (!find_objects_)
+    if (!find_objects_ && !continuous_detection_)
       return;
 
     // Convert to point cloud
@@ -140,7 +143,7 @@ private:
       std::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>();
     pcl::fromROSMsg(*msg, *cloud);
 
-    RCLCPP_DEBUG(LOGGER, "Cloud recieved with %d points.", static_cast<int>(cloud->points.size()));
+    RCLCPP_DEBUG(LOGGER, "Cloud received with %d points.", static_cast<int>(cloud->points.size()));
 
     // Filter out noisy long-range points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -230,7 +233,7 @@ private:
       {
         find_objects_ = false;
         goal_handle->abort(result);
-        RCLCPP_ERROR(LOGGER, "Failed to get camera data in alloted time.");
+        RCLCPP_ERROR(LOGGER, "Failed to get camera data in allocated time.");
         return;
       }
     }
@@ -262,6 +265,7 @@ private:
   std::string world_frame_;
 
   bool find_objects_;
+  bool continuous_detection_;
   std::vector<grasping_msgs::msg::Object> objects_;
   std::vector<grasping_msgs::msg::Object> supports_;
 
