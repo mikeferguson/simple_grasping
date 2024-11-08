@@ -2,8 +2,8 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2024-11-08)
+------------------
 * remove unported script
 * add documentation
 * forward port continuous detection (`#16 <https://github.com/mikeferguson/simple_grasping/issues/16>`_)
