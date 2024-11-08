@@ -2,6 +2,24 @@
 Changelog for package simple_grasping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* remove unported script
+* add documentation
+* forward port continuous detection (`#16 <https://github.com/mikeferguson/simple_grasping/issues/16>`_)
+  forward port of `#7 <https://github.com/mikeferguson/simple_grasping/issues/7>`_
+* add support for QoS overrides (`#15 <https://github.com/mikeferguson/simple_grasping/issues/15>`_)
+* add continuous integration (`#14 <https://github.com/mikeferguson/simple_grasping/issues/14>`_)
+  targeting iron only right now - grasping_msgs just released into jazzy
+* cleanup dependencies and build, works on jazzy
+* replace c-style cast
+* fix issues in package.xml
+  trying to get the build farm to succeed on source job
+* add LICENSE file
+* updates for ROS2 humble (`#9 <https://github.com/mikeferguson/simple_grasping/issues/9>`_)
+* initial port to ros2 (`#6 <https://github.com/mikeferguson/simple_grasping/issues/6>`_)
+* Contributors: Michael Ferguson
+
 0.3.1 (2018-08-14)
 ------------------
 * insert proper key name
