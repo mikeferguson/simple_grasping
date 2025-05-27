@@ -2,16 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [ ros2 ]
+    branches: [ jazzy ]
   pull_request:
-    branches: [ ros2 ]
+    branches: [ jazzy ]
 
 jobs:
   industrial_ci:
     strategy:
       matrix:
         env:
-          - {ROS_DISTRO: iron, ROS_REPO: main}
+          - {ROS_DISTRO: humble, ROS_REPO: main}
+          - {ROS_DISTRO: jazzy, ROS_REPO: main}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
