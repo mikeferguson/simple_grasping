@@ -22,16 +22,17 @@ include_directories(
 )
 
 set(common_depends
-  geometry_msgs
-  grasping_msgs
-  pcl_conversions
-  pcl_ros
-  rclcpp
-  rclcpp_action
-  rclcpp_components
-  sensor_msgs
-  shape_msgs
-  tf2_ros
+  ${geometry_msgs_TARGETS}
+  ${grasping_msgs_TARGETS}
+  ${PCL_LIBRARIES}
+  ${sensor_msgs_TARGETS}
+  ${shape_msgs_TARGETS}
+  pcl_conversions::pcl_conversions
+  pcl_ros::pcl_ros_tf
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  rclcpp_components::component
+  tf2_ros::tf2_ros
 )
 
 ### Build simple_grasping library
@@ -41,15 +42,13 @@ add_library(simple_grasping SHARED
   src/shape_extraction.cpp
   src/shape_grasp_planner.cpp
 )
-ament_target_dependencies(simple_grasping ${common_depends})
-target_link_libraries(simple_grasping ${PCL_LIBRARIES})
+target_link_libraries(simple_grasping ${common_depends})
 
 ### Build basic_grasping_perception
 add_library(basic_grasping_perception SHARED
   src/basic_grasping_perception.cpp
 )
-ament_target_dependencies(basic_grasping_perception ${common_depends})
-target_link_libraries(basic_grasping_perception simple_grasping ${PCL_LIBRARIES})
+target_link_libraries(basic_grasping_perception simple_grasping ${common_depends})
 rclcpp_components_register_node(basic_grasping_perception
   PLUGIN "simple_grasping::BasicGraspingPerception"
   EXECUTABLE basic_grasping_perception_node
@@ -59,8 +58,7 @@ rclcpp_components_register_node(basic_grasping_perception
 add_library(grasp_planner SHARED
   src/grasp_planner_node.cpp
 )
-ament_target_dependencies(grasp_planner ${common_depends})
-target_link_libraries(grasp_planner simple_grasping ${PCL_LIBRARIES})
+target_link_libraries(grasp_planner simple_grasping ${common_depends})
 rclcpp_components_register_node(grasp_planner
   PLUGIN "simple_grasping::GraspPlannerNode"
   EXECUTABLE grasp_planner_node
@@ -72,8 +70,7 @@ if (BUILD_TESTING)
   ament_add_gtest(simple_grasping_test_shape_extraction
     test/test_shape_extraction.cpp
   )
-  ament_target_dependencies(simple_grasping_test_shape_extraction ${common_depends})
-  target_link_libraries(simple_grasping_test_shape_extraction simple_grasping ${PCL_LIBRARIES})
+  target_link_libraries(simple_grasping_test_shape_extraction simple_grasping ${common_depends})
 
   find_package(ament_cmake_cpplint)
   ament_cpplint(FILTERS "-whitespace/braces" "-whitespace/newline")
